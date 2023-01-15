@@ -1,6 +1,3 @@
-# fetchrewards
-
-
 # Fetch Rewards 
 # Data Engineering - Take home by Surya Vaddhiparthy 
 
@@ -23,17 +20,17 @@ It could run as a script on a local machine or containerized environment like do
 
 
 
-Steps
+# Steps
 
-Extracting the data from SQS:
+## Extracting the data from SQS:
 The script connects to the local stack SQS service and receives messages from the SQS queue running on the Docker image on port 4566. The messages are then parsed as JSON data and stored in a variable.
 
-Transforming the data:
+## Transforming the data:
 The data is transformed by masking the device_id and IP fields, using hashing
 assuming semantic versioning convention major.minor.patch structure
-the major portion of the version number i.e., converting the app version to an integer to suit the data type listed in the DDL statement provided 
+th e major portion of the version number i.e., converting the app version to an integer to suit the data type listed in the DDL statement provided 
 
-Loading the data into PostgreSQL:
+## Loading the data into PostgreSQL:
 The script connects to the local stack Postgres service running on the second Docker image on port 5432. The script creates a table in the PostgreSQL database (if it doesn't exist) with the provided schema and then inserts the transformed data into the table.
 
 
@@ -41,24 +38,24 @@ The script connects to the local stack Postgres service running on the second Do
 
 
 
-Questions?
+# Questions?
 
-How would you deploy this application in production?
+## How would you deploy this application in production?
 To deploy this application in production, I recommend using a cloud-based infrastructure, such as AWS or GCP, to run the application. Additionally, a CI/CD pipeline can be set up to automatically build and deploy new versions of the application as they become available.
 
-What other components would you want to add to make this production ready?
+## What other components would you want to add to make this production ready?
 •	Implementing proper error handling and logging to track any issues that occur.
 •	Implementing a backup and recovery.
 
-How can this application scale with a growing dataset?
+## How can this application scale with a growing dataset?
 •	Using a distributed database like Amazon Aurora or Google Spanner for storing the data.
 •	Using a load balancer to distribute the incoming traffic across multiple instances of the application.
 •	Using auto-scaling to automatically add or remove instances of the application based on the load.
 
-How can PII be recovered later?
+## How can PII be recovered later?
 Recovering PII (personally identifiable information) later would likely depend on the transformation technique. Hashing is irreversible. Cryptography way of masking is reversible
 
-What are the assumptions you made?
+## What are the assumptions you made?
 •	The script is running on a local machine and python 3.
 •	The user has the necessary access credentials to connect to the SQS and PostgreSQL services.
 •	The data is JSON formatted and follows a specific structure
