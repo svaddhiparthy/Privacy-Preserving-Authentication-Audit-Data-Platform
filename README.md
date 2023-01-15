@@ -6,16 +6,16 @@
 ## How will you read messages from the queue?
 I will use the Boto3 library and the sqs.receive_message() method to read messages from the queue.
 
-What type of data structures should be used?
+## What type of data structures should be used?
 Combination of dictionaries and lists.
 
-How will you mask the PII data so that duplicate values can be identified?
+## How will you mask the PII data so that duplicate values can be identified?
 To mask the PII data, I would use a one-way hashing function such as SHA-256, which will create a unique hash for each value while still allowing duplicate values to be identified by comparing their corresponding hashes.
 
-What will be your strategy for connecting and writing to Postgres?
+## What will be your strategy for connecting and writing to Postgres?
 To connect and write to Postgres, I would use the psycopg2 library, which is a Postgres adapter for Python. I would use psycopg2.connect() method to connect to the Postgres database, and the psycopg2.cursor() and cursor.execute() methods to write the data to the appropriate table.
 
-Where and how will your application run?
+## Where and how will your application run?
 It could run as a script on a local machine or containerized environment like docker. The script would need to run on an environment where it has access to the internet and the correct credentials to connect to the AWS SQS and Postgre.
 
 
