@@ -1,3 +1,5 @@
+# SecureLog: A Secure and Efficient Data Logging and Analysis System
+
 This code extracts data from an SQS service and transforms it to preserve uniqueness and privacy by masking certain fields using hashlib. The data is then loaded into a PostgresSQL database table as per the provided schema. The app version is extracted and converted to an integer as per the destination database requirements. The final result is the creation of a user_logins table with the data from the SQS queue.
 
 # DOCUMENTATION
