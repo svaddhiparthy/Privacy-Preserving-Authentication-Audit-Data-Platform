@@ -18,7 +18,7 @@ The psycopg2 library is used to connect to Postgres and write data to the approp
 ### Running the application
 The system can be run as a script on a local machine or containerized environment like Docker. It requires access to the internet and the correct credentials to connect to the AWS SQS and Postgres.
 
-### Steps
+## Steps
 Extracting the data from SQS
 The system connects to the local stack SQS service and receives messages from the SQS queue running on the Docker image on port 4566. The messages are then parsed as JSON data and stored in a variable.
 
