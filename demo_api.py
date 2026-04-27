@@ -1,4 +1,5 @@
 import json
+import sys
 from pathlib import Path
 from uuid import uuid4
 
@@ -6,7 +7,12 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
-from code_fetch_vaddhiparthy import transform_event, validate_event
+PROJECT_ROOT = Path(__file__).resolve().parent
+SRC_ROOT = PROJECT_ROOT / "src"
+if str(SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(SRC_ROOT))
+
+from pramanaledger.transform import transform_event, validate_event
 
 
 app = FastAPI(title="Secure Login Events Ingestion Demo")
