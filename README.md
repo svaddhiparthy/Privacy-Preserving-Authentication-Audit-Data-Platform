@@ -288,3 +288,24 @@ The RBA adapter lives in:
 src/pramanaledger/sources.py
 scripts/prepare_rba_dataset.py
 ```
+
+## Offline RBA Run Artifacts
+
+The project also includes a local-only execution path that processes the downloaded RBA zip without AWS, S3, hosted queues, or remote warehouses:
+
+```powershell
+$env:PYTHONPATH = "src"
+python scripts\run_offline_rba_pipeline.py `
+  --source data\external\rba\rba-dataset.zip `
+  --artifacts-dir data\artifacts\rba_offline `
+  --limit 100000 `
+  --preview-rows 1000
+```
+
+The latest offline run processed a 100,000-record slice and captured compact portfolio artifacts under:
+
+```text
+docs/artifacts/rba_offline/
+```
+
+The full downloaded source zip remains local under `data/external/rba/` and is ignored by Git. The committed artifacts include summary metrics, table inventory, audit evidence, and limited preview samples from the bronze and silver stages.

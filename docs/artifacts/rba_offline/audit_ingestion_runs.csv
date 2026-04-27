@@ -1,0 +1,2 @@
+batch_id,source_path,started_at_utc,completed_at_utc,execution_seconds,messages_received,records_loaded,records_rejected
+offline-rba-local,data\external\rba\rba-dataset.zip,2026-04-27T22:52:20.851583+00:00,2026-04-27T22:52:26.012030+00:00,5.16,100000,100000,0

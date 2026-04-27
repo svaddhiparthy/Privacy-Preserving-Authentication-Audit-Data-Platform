@@ -34,7 +34,13 @@ def _read_text(path: str) -> str:
 
 def _sample_events() -> list[dict]:
     external = PROJECT_ROOT / "data" / "external" / "rba" / "login_events.normalized.jsonl"
-    source = external if external.exists() else PROJECT_ROOT / "sample_data" / "login_events.jsonl"
+    packaged_artifact = PROJECT_ROOT / "docs" / "artifacts" / "rba_offline" / "bronze_rba_login_events_sample.jsonl"
+    if external.exists():
+        source = external
+    elif packaged_artifact.exists():
+        source = packaged_artifact
+    else:
+        source = PROJECT_ROOT / "sample_data" / "login_events.jsonl"
     rows = []
     for line in source.read_text(encoding="utf-8").splitlines():
         if line.strip():
@@ -127,6 +133,7 @@ def platform_summary() -> dict:
         ],
         "sample_metrics": metrics,
         "active_data_source": active_data_source(),
+        "offline_artifacts": offline_artifacts()["metrics"],
     }
 
 
@@ -157,6 +164,24 @@ def source_registry() -> dict:
     }
 
 
+@app.get("/api/offline-artifacts")
+def offline_artifacts() -> dict:
+    artifact_root = PROJECT_ROOT / "data" / "artifacts" / "rba_offline"
+    packaged_root = PROJECT_ROOT / "docs" / "artifacts" / "rba_offline"
+    root = artifact_root if (artifact_root / "offline_run_manifest.json").exists() else packaged_root
+    manifest_path = root / "offline_run_manifest.json"
+    if not manifest_path.exists():
+        return {"available": False, "metrics": {}, "table_inventory": [], "audit": {}}
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    return {
+        "available": True,
+        "artifact_root": str(root.relative_to(PROJECT_ROOT)),
+        "audit": manifest.get("audit", {}),
+        "metrics": manifest.get("metrics", {}),
+        "table_inventory": manifest.get("table_inventory", []),
+    }
+
+
 def active_data_source() -> dict:
     external = PROJECT_ROOT / "data" / "external" / "rba" / "login_events.normalized.jsonl"
     if external.exists():
@@ -165,6 +190,15 @@ def active_data_source() -> dict:
             "type": "kaggle_or_zenodo_sample",
             "path": "data/external/rba/login_events.normalized.jsonl",
             "records": len(external.read_text(encoding="utf-8").splitlines()),
+        }
+    packaged_artifact = PROJECT_ROOT / "docs" / "artifacts" / "rba_offline" / "bronze_rba_login_events_sample.jsonl"
+    if packaged_artifact.exists():
+        artifacts = offline_artifacts()
+        return {
+            "name": "RBA Login Data Set offline artifact sample",
+            "type": "offline_artifact_sample",
+            "path": "docs/artifacts/rba_offline/bronze_rba_login_events_sample.jsonl",
+            "records": artifacts.get("metrics", {}).get("records_processed", len(packaged_artifact.read_text(encoding="utf-8").splitlines())),
         }
     return {
         "name": "Deterministic local authentication sample",

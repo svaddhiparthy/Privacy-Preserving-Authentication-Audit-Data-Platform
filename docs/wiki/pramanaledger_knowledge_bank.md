@@ -76,7 +76,9 @@ The model is intentionally small. It demonstrates a production-shaped triad: cur
 
 ## Current Execution Evidence
 
-The public page exposes live API-backed sections instead of static screenshots. The transform preview calls the running service, reads repository sample events, executes the same transform function used by the worker, and returns curated output. The table browser is generated from the implemented schema and sample transform output. The source contract and SQL schema are served directly from repository assets packaged into the production image.
+The public page exposes API-backed sections instead of static screenshots. The transform preview calls the running service, reads packaged authentication events, executes the same transform function used by the worker, and returns curated output. The table browser is generated from the implemented schema and transform output. The source contract and SQL schema are served directly from repository assets packaged into the production image.
+
+The local offline RBA run processed 100,000 records from the downloaded RBA dataset. That run produced an audit record, source-stage sample, curated-stage sample, summary metrics, and table inventory. Those compact artifacts are packaged under `docs/artifacts/rba_offline` so the deployed site can present evidence of execution without committing the full 1.1 GB source dataset.
 
 ## Planned Expansion
 
