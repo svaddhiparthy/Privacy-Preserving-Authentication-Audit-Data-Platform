@@ -33,8 +33,10 @@ def _read_text(path: str) -> str:
 
 
 def _sample_events() -> list[dict]:
+    external = PROJECT_ROOT / "data" / "external" / "rba" / "login_events.normalized.jsonl"
+    source = external if external.exists() else PROJECT_ROOT / "sample_data" / "login_events.jsonl"
     rows = []
-    for line in _read_text("sample_data/login_events.jsonl").splitlines():
+    for line in source.read_text(encoding="utf-8").splitlines():
         if line.strip():
             rows.append(json.loads(line))
     return rows
@@ -124,6 +126,51 @@ def platform_summary() -> dict:
             "Batch-level audit evidence",
         ],
         "sample_metrics": metrics,
+        "active_data_source": active_data_source(),
+    }
+
+
+@app.get("/api/source-registry")
+def source_registry() -> dict:
+    return {
+        "active_source": active_data_source(),
+        "available_sources": [
+            {
+                "name": "RBA Login Data Set",
+                "provider": "DAS Group / Kaggle / Zenodo",
+                "license": "CC BY 4.0",
+                "status": "adapter implemented; activate by placing the zip or CSV under data/external/rba and running scripts/prepare_rba_dataset.py",
+                "dataset_ref": "dasgroup/rba-dataset",
+                "doi": "10.5281/zenodo.6782156",
+                "why_it_fits": "Synthesized login-attempt data with IP, country, ASN, user agent, device type, user ID, timestamp, RTT, login success, attack IP, and account takeover flags.",
+            },
+            {
+                "name": "Deterministic local sample",
+                "provider": "Repository fixture",
+                "license": "Project-owned synthetic data",
+                "status": "active fallback",
+                "dataset_ref": "sample_data/login_events.jsonl",
+                "doi": None,
+                "why_it_fits": "Small, safe authentication telemetry fixture for tests, demos, and production page fallback.",
+            },
+        ],
+    }
+
+
+def active_data_source() -> dict:
+    external = PROJECT_ROOT / "data" / "external" / "rba" / "login_events.normalized.jsonl"
+    if external.exists():
+        return {
+            "name": "RBA Login Data Set normalized sample",
+            "type": "kaggle_or_zenodo_sample",
+            "path": "data/external/rba/login_events.normalized.jsonl",
+            "records": len(external.read_text(encoding="utf-8").splitlines()),
+        }
+    return {
+        "name": "Deterministic local authentication sample",
+        "type": "repository_fixture",
+        "path": "sample_data/login_events.jsonl",
+        "records": len((PROJECT_ROOT / "sample_data" / "login_events.jsonl").read_text(encoding="utf-8").splitlines()),
     }
 
 

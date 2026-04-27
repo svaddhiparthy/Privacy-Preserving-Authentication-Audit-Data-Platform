@@ -237,3 +237,54 @@ The deployed page is a technical surface, not only a landing page. It currently 
 | Knowledge bank | `docs/wiki/pramanaledger_knowledge_bank.md` |
 
 The sample dataset is deterministic synthetic authentication telemetry. It is intentionally generated rather than scraped from public user activity because authentication logs are sensitive by nature and public samples are often licensed, stale, or stripped of useful operational fields.
+
+## RBA Dataset Integration
+
+The project now includes an adapter for the Login Data Set for Risk-Based Authentication, published by the DAS Group and available on Kaggle as:
+
+```text
+dasgroup/rba-dataset
+```
+
+The same dataset is also published on Zenodo with DOI:
+
+```text
+10.5281/zenodo.6782156
+```
+
+The RBA dataset is large, so it is not committed into this repository. To activate it locally:
+
+```powershell
+mkdir data\external\rba
+```
+
+Place the downloaded zip or CSV in that folder, then run:
+
+```powershell
+$env:PYTHONPATH = "src"
+python scripts\prepare_rba_dataset.py `
+  --source data\external\rba\rba-dataset.zip `
+  --output data\external\rba\login_events.normalized.jsonl `
+  --limit 5000
+```
+
+When `data/external/rba/login_events.normalized.jsonl` exists, the demo API automatically uses it instead of the small repository fixture.
+
+The adapter maps RBA columns into the platform contract:
+
+| RBA field | Platform field |
+|---|---|
+| `User ID` | `user_id` |
+| `Device Type` plus browser and OS | `device_type`, `device_id` |
+| `IP Address` | `ip` |
+| `Country` | `locale` |
+| `Login Timestamp` | `event_time_utc` |
+| `Login Successful` | `auth_result` |
+| `Is Attack IP`, `Is Account Takeover` | `risk_band` |
+
+The RBA adapter lives in:
+
+```text
+src/pramanaledger/sources.py
+scripts/prepare_rba_dataset.py
+```

@@ -23,9 +23,11 @@ The project is intentionally positioned as a banking-style data engineering syst
 
 ## Source Data Strategy
 
-The live page uses deterministic synthetic authentication telemetry. That is deliberate. Real login-event datasets are often sensitive, licensed, stale, or stripped of the operational fields needed to demonstrate privacy engineering. A generated dataset lets the project show realistic data movement without copying anyone's private user activity.
+The live page can use two source modes. The default mode uses deterministic synthetic authentication telemetry stored in the repository. The external mode uses the Login Data Set for Risk-Based Authentication from DAS Group, available through Kaggle and Zenodo.
 
-The synthetic feed includes user identifiers, device types, device identifiers, IP-like addresses, locales, application versions, event timestamps, authentication outcomes, and risk bands. The raw fields are sufficient to demonstrate contract validation, identifier tokenization, replay-safe event identity, curated table loading, and operational metrics.
+The RBA dataset is a strong fit because it contains synthesized login attempts with IP address, country, region, city, ASN, user agent string, operating system, browser, device type, user ID, login timestamp, round-trip time, login success, attack-IP indicator, and account-takeover indicator. Those fields map naturally into the PramanaLedger contract and make the project more than a two-row demonstration.
+
+The full dataset is large, so the repository carries an adapter instead of committing the data. When `data/external/rba/login_events.normalized.jsonl` is present, the API switches from the local fixture to the normalized RBA sample automatically.
 
 The project can later add public reference data without changing the core design. Good candidates are IP geolocation reference tables, autonomous-system lookup data, device taxonomy mappings, country and locale reference data, and public security-control frameworks. Those enrich the platform without requiring private login data.
 

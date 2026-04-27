@@ -113,3 +113,11 @@ s3://finlens-vaddhiparthy-vip-raw/pramana-ledger/reports/
 ```
 
 No cloud mirror is required for the first working build.
+
+## External Dataset Activation
+
+The primary external dataset target is the Login Data Set for Risk-Based Authentication from DAS Group. It is directly aligned with this platform because it contains synthesized login attempts, IP-derived geography, ASN, user agent attributes, user identifiers, login timestamps, round-trip time, login success, attack-IP flags, and account-takeover labels.
+
+The adapter is implemented in `src/pramanaledger/sources.py`. It normalizes the Kaggle or Zenodo CSV/zip into the same JSONL contract used by the ingestion worker. The API checks for `data/external/rba/login_events.normalized.jsonl` and uses that file when present; otherwise, it falls back to the repository fixture.
+
+The full RBA dataset is intentionally not committed because it is large. The repository carries the adapter, contract mapping, and activation instructions.
