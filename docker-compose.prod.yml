@@ -1,0 +1,17 @@
+services:
+  pramanaledger-demo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pramanaledger-demo
+    restart: unless-stopped
+    environment:
+      HASH_SECRET: ${HASH_SECRET:-local-demo-secret}
+    expose:
+      - "8075"
+    networks:
+      - finlens_default
+
+networks:
+  finlens_default:
+    external: true
