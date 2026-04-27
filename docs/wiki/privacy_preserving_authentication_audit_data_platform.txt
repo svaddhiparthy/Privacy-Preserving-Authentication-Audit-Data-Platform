@@ -1,0 +1,105 @@
+====== Privacy Preserving Authentication Audit Data Platform ======
+
+===== Page Status =====
+
+This page is the project documentation source for the PramanaLedger build. It is DokuWiki-ready and can be copied under the existing PII ingestion project page when direct wiki filesystem access is available.
+
+===== Project Identity =====
+
+Formal name:
+
+  * Privacy Preserving Authentication Audit Data Platform
+
+Internal name:
+
+  * PramanaLedger
+
+Public slug:
+
+  * privacy-preserving-authentication-audit-data-platform
+
+Planned public route:
+
+  * https://surya.vaddhiparthy.com/privacy-preserving-authentication-audit-data-platform
+
+===== Current Implementation =====
+
+The current implementation consumes login-event messages from an SQS-compatible queue, validates the event shape, tokenizes sensitive fields, writes idempotent curated records into PostgreSQL, quarantines invalid records, and records batch-level audit evidence.
+
+Implemented components:
+
+^ Component ^ Status ^ Location ^
+| SQS ingestion | Working locally | src/pramanaledger/sqs.py |
+| Contract validation | Working | src/pramanaledger/transform.py |
+| HMAC tokenization | Working | src/pramanaledger/tokenization.py |
+| PostgreSQL persistence | Working | src/pramanaledger/postgres.py |
+| Batch runner | Working | src/pramanaledger/runner.py |
+| Demo API | Working locally | demo_api.py |
+| Unit tests | Working | tests/test_code_fetch_vaddhiparthy.py |
+
+===== Current Data Flow =====
+
+<code>
+Login Events JSON
+        |
+        v
+LocalStack SQS
+        |
+        v
+Ingestion Worker
+        |
+        +--> validate event contract
+        +--> reject malformed events to quarantine
+        +--> tokenize IP and device identifiers
+        +--> generate deterministic event_id
+        |
+        v
+PostgreSQL secure_login schema
+        |
+        +--> user_logins
+        +--> quarantine_login_events
+        +--> ingestion_audit
+</code>
+
+===== Database Model =====
+
+Primary schema:
+
+  * secure_login
+
+Tables:
+
+^ Table ^ Purpose ^
+| secure_login.user_logins | Curated login-event records with tokenized sensitive fields |
+| secure_login.quarantine_login_events | Rejected payloads and validation reasons |
+| secure_login.ingestion_audit | Batch start/end timestamps, received count, loaded count, rejected count |
+
+===== Target Expansion =====
+
+The project will be expanded using the same operating pattern as FinLens: local-first runtime, governed layers, technical surface, wiki knowledge bank, operational evidence, and clean deployment.
+
+Target slices:
+
+  - Source contract registry.
+  - PII vault with controlled re-identification.
+  - Bronze, Silver, and Gold data layers.
+  - dbt models and privacy tests.
+  - Airflow orchestration.
+  - Streamlit operational and technical surfaces.
+  - FastAPI health and evidence endpoints.
+  - Public route under the portfolio domain.
+
+===== Non-Negotiable Rules =====
+
+  * Raw IP addresses and raw device identifiers must not enter analytical marts.
+  * Secrets must remain in environment variables or ignored secret stores.
+  * Invalid records must be quarantined with a reason instead of silently coerced.
+  * Replays must be idempotent.
+  * Public documentation must describe implemented behavior and clearly label planned work.
+  * Local execution must remain possible without paid cloud services.
+
+===== Working Notes =====
+
+Directional updates belong in the sibling page:
+
+  * privacy_preserving_authentication_audit_data_platform_working_notes
