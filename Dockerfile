@@ -12,6 +12,7 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 COPY contracts /app/contracts
 COPY docs /app/docs
 COPY sample_data /app/sample_data
+COPY scripts /app/scripts
 COPY sql /app/sql
 COPY src /app/src
 COPY code_fetch_vaddhiparthy.py demo_api.py /app/
