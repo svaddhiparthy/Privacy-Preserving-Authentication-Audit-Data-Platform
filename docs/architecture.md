@@ -1,43 +1,109 @@
-# Secure Login Events Ingestion Architecture
+# Architecture Plan
 
-## Executive Summary
+## Operating Name
 
-This project is now positioned as a secure event ingestion platform rather than a single Python ETL script. It demonstrates queue consumption, contract validation, PII tokenization, idempotent analytics loading, quarantine handling, and operational audit trails.
+Formal name:
 
-## Data Flow
+```text
+Privacy Preserving Authentication Audit Data Platform
+```
 
-1. Login events arrive in SQS.
-2. The ingestion worker receives a bounded batch.
-3. Raw event shape is validated against required contract fields.
-4. Direct identifiers are replaced with HMAC-SHA256 tokens.
-5. Valid events are loaded into `secure_login.user_logins`.
-6. Invalid events are loaded into `secure_login.quarantine_login_events`.
-7. Batch metadata is written to `secure_login.ingestion_audit`.
+Internal name:
 
-## Data Engineering Signals
+```text
+PramanaLedger
+```
 
-- Idempotency through deterministic `event_id`.
-- PII minimization before durable persistence.
-- Quarantine path for malformed records.
-- Audit table for SLA, freshness, and recovery discussions.
-- LocalStack and Postgres Docker services for reproducible local execution.
-- Demo API for web presentation and recruiter walkthroughs.
+Public slug:
 
-## Enterprise-Grade Additions To Implement Next
+```text
+privacy-preserving-authentication-audit-data-platform
+```
 
-- **dbt** for bronze/silver/gold models and data tests.
-- **Great Expectations** for field-level validation reports and quality gates.
-- **Airflow or Dagster** for orchestration, retries, backfills, and dependency visualization.
-- **OpenLineage-compatible event model** for job, run, and dataset lineage.
-- **Prometheus and Grafana** for ingestion lag, reject rate, queue depth, and freshness SLA dashboards.
-- **Kafka-compatible streaming mode** for high-throughput event ingestion.
-- **Secrets-backed tokenization salt** through environment or vault integration.
-- **Synthetic load generator** to demonstrate throughput and failure recovery.
+## Purpose
 
-## Future Production Hardening
+The platform is a secure authentication-event ingestion and audit system. It demonstrates the engineering controls that a regulated environment expects around authentication data: contract validation, PII minimization, deterministic replay safety, quarantine handling, auditability, and operational evidence.
 
-- Add schema registry or event contract versioning.
-- Add dbt models/tests over the curated tables.
-- Add OpenLineage emission for job-level lineage.
-- Add Prometheus counters and freshness alerts.
-- Add partitioning by `create_date` for larger-scale workloads.
+The project starts from a working local pipeline and will expand in controlled slices. The design goal is not to add tooling for its own sake. Every component must either protect sensitive data, improve pipeline reliability, expose operational evidence, or make the data model more maintainable.
+
+## Current Data Flow
+
+```text
+Login event message
+        |
+        v
+SQS-compatible queue
+        |
+        v
+Batch ingestion worker
+        |
+        +--> validate required fields
+        +--> validate device type
+        +--> parse app version
+        +--> HMAC-tokenize IP and device ID
+        +--> generate deterministic event_id
+        |
+        v
+PostgreSQL secure_login schema
+        |
+        +--> user_logins
+        +--> quarantine_login_events
+        +--> ingestion_audit
+```
+
+## Target Expansion Architecture
+
+```text
+Source queue
+    |
+    v
+Contract validation
+    |
+    +--> quarantine
+    |
+    v
+Tokenization and event identity
+    |
+    +--> PII vault access boundary
+    |
+    v
+Bronze raw retention
+    |
+    v
+Silver validated records
+    |
+    v
+Gold audit marts
+    |
+    +--> FastAPI
+    +--> Streamlit operational surface
+    +--> Streamlit technical surface
+    +--> Wiki knowledge bank
+```
+
+## Expansion Slices
+
+| Slice | Scope | Validation target |
+|---|---|---|
+| 1 | Package refactor | Existing unit tests unchanged |
+| 2 | Local runtime foundation | Docker Compose, API health, smoke test |
+| 3 | Source contracts | Valid and invalid contract fixtures |
+| 4 | PII vault | RBAC denial, audit row creation, re-identification path |
+| 5 | dbt modeling | Mart tests and no-raw-PII invariant |
+| 6 | Airflow orchestration | DAG import and task command validation |
+| 7 | Streamlit surfaces | App startup and table preview smoke test |
+| 8 | Wiki and README | Documentation scan and link consistency |
+| 9 | Deployment | Public route and health endpoint checks |
+
+## Cloud Posture
+
+The project is local-first. LocalStack is the default for AWS-compatible services. The existing S3 bucket family can be reused later under a project-specific prefix:
+
+```text
+s3://finlens-vaddhiparthy-vip-raw/pramana-ledger/bronze/
+s3://finlens-vaddhiparthy-vip-raw/pramana-ledger/silver/
+s3://finlens-vaddhiparthy-vip-raw/pramana-ledger/gold/
+s3://finlens-vaddhiparthy-vip-raw/pramana-ledger/reports/
+```
+
+No cloud mirror is required for the first working build.
