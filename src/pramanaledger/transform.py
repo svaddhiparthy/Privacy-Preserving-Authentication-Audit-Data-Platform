@@ -31,6 +31,10 @@ def validate_event(event: dict[str, Any]) -> None:
         raise ValueError("user_id cannot be blank")
     if str(event["device_type"]).lower() not in {"ios", "android", "web"}:
         raise ValueError("device_type must be one of ios, android, web")
+    if "auth_result" in event and str(event["auth_result"]).lower() not in {"success", "failure"}:
+        raise ValueError("auth_result must be success or failure")
+    if "risk_band" in event and str(event["risk_band"]).lower() not in {"low", "medium", "high"}:
+        raise ValueError("risk_band must be low, medium, or high")
     parse_major_version(str(event["app_version"]))
 
 
@@ -52,6 +56,9 @@ def transform_event(
         "masked_ip": hmac_value(str(event["ip"]), hash_secret),
         "masked_device_id": hmac_value(str(event["device_id"]), hash_secret),
         "locale": str(event["locale"]),
+        "event_time_utc": str(event.get("event_time_utc", timestamp.isoformat())),
+        "auth_result": str(event.get("auth_result", "success")).lower(),
+        "risk_band": str(event.get("risk_band", "low")).lower(),
         "app_version": parse_major_version(str(event["app_version"])),
         "app_version_raw": str(event["app_version"]),
         "source_event_hash": source_hash,

@@ -45,6 +45,24 @@ def _transformed_events() -> list[dict]:
     return [transform_event(event, batch_id=batch_id) for event in _sample_events()]
 
 
+def _event_metrics() -> dict:
+    events = _sample_events()
+    transformed = _transformed_events()
+    failures = sum(1 for event in events if event.get("auth_result") == "failure")
+    high_risk = sum(1 for event in events if event.get("risk_band") == "high")
+    device_mix = {}
+    for row in transformed:
+        device_mix[row["device_type"]] = device_mix.get(row["device_type"], 0) + 1
+    return {
+        "source_events": len(events),
+        "curated_events": len(transformed),
+        "unique_users": len({event["user_id"] for event in events}),
+        "auth_failures": failures,
+        "high_risk_events": high_risk,
+        "device_mix": device_mix,
+    }
+
+
 def _audit_rows() -> list[dict]:
     rows = _transformed_events()
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -78,14 +96,18 @@ def healthz() -> dict:
 @app.get("/api/platform-summary")
 def platform_summary() -> dict:
     transformed = _transformed_events()
+    metrics = _event_metrics()
     return {
         "project": "Privacy Preserving Authentication Audit Data Platform",
         "internal_name": "PramanaLedger",
         "public_route": "https://surya.vaddhiparthy.com/privacy-preserving-authentication-audit-data-platform",
         "purpose": "A governed authentication-event ingestion platform that validates login telemetry, tokenizes sensitive identifiers, preserves audit evidence, and produces curated security analytics tables.",
         "implemented_counts": {
-            "source_event_examples": len(_sample_events()),
-            "curated_event_examples": len(transformed),
+            "source_event_examples": metrics["source_events"],
+            "curated_event_examples": metrics["curated_events"],
+            "unique_users": metrics["unique_users"],
+            "auth_failures": metrics["auth_failures"],
+            "high_risk_events": metrics["high_risk_events"],
             "sql_tables": 3,
             "sql_views": 1,
             "contract_versions": 1,
@@ -101,6 +123,7 @@ def platform_summary() -> dict:
             "Quarantine path for rejected records",
             "Batch-level audit evidence",
         ],
+        "sample_metrics": metrics,
     }
 
 
@@ -230,12 +253,12 @@ def quality_gates() -> dict:
 
 @app.get("/api/sample-events")
 def sample_events() -> dict:
-    return {"records": _sample_events()}
+    return {"records": _sample_events()[:12], "total_records": len(_sample_events())}
 
 
 @app.get("/api/sample-transform")
 def sample_transform() -> dict:
-    return {"records": _transformed_events()}
+    return {"records": _transformed_events()[:12], "total_records": len(_transformed_events())}
 
 
 @app.get("/api/table-preview")
@@ -253,6 +276,9 @@ def table_preview() -> dict:
                     "masked_ip",
                     "masked_device_id",
                     "locale",
+                    "event_time_utc",
+                    "auth_result",
+                    "risk_band",
                     "app_version",
                     "app_version_raw",
                     "source_event_hash",
@@ -260,7 +286,7 @@ def table_preview() -> dict:
                     "create_date",
                     "ingested_at_utc",
                 ],
-                "sample_rows": _transformed_events(),
+                "sample_rows": _transformed_events()[:12],
             },
             {
                 "name": "secure_login.ingestion_audit",
@@ -297,7 +323,24 @@ def source_contract() -> dict:
 
 @app.get("/api/wiki", response_class=PlainTextResponse)
 def wiki() -> str:
-    return _read_text("docs/wiki/privacy_preserving_authentication_audit_data_platform.txt")
+    return _read_text("docs/wiki/pramanaledger_knowledge_bank.md")
+
+
+@app.get("/api/wiki-articles")
+def wiki_articles() -> dict:
+    markdown = _read_text("docs/wiki/pramanaledger_knowledge_bank.md")
+    articles = []
+    current = None
+    for line in markdown.splitlines():
+        if line.startswith("## "):
+            if current:
+                articles.append(current)
+            current = {"title": line[3:].strip(), "body": []}
+        elif current:
+            current["body"].append(line)
+    if current:
+        articles.append(current)
+    return {"articles": [{"title": item["title"], "body": "\n".join(item["body"]).strip()} for item in articles]}
 
 
 @app.get("/api/working-notes", response_class=PlainTextResponse)

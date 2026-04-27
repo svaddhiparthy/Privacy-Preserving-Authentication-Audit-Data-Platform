@@ -81,6 +81,12 @@ Gold audit marts
     +--> Wiki knowledge bank
 ```
 
+## Scope Boundary
+
+The expansion architecture in this document is the target roadmap, not a claim that every module is live today. The current deployed implementation covers the secure ingestion core: queue-compatible intake, validation, HMAC tokenization, curated persistence, quarantine handling, audit evidence, health endpoints, and a public technical surface.
+
+Modules such as PII vault, Airflow, dbt, S3 lakehouse storage, and monitoring remain planned until their executable code paths, smoke tests, and public evidence pages are present.
+
 ## Expansion Slices
 
 | Slice | Scope | Validation target |

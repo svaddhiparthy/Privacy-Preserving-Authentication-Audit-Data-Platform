@@ -23,7 +23,8 @@ The current working implementation is intentionally compact and testable:
 | PostgreSQL curated table | Working | `secure_login.user_logins` |
 | Quarantine table | Working | `secure_login.quarantine_login_events` |
 | Batch audit table | Working | `secure_login.ingestion_audit` |
-| Demo API | Working locally | `demo_api.py` |
+| Demo API | Working locally and deployed | `demo_api.py` |
+| Public technical surface | Working | Platform summary, flow, transform preview, data browser, schema, contract, controls, and knowledge bank |
 | Unit tests | Working | `tests/test_code_fetch_vaddhiparthy.py` |
 
 ## Architecture
@@ -82,6 +83,9 @@ Each login event must include:
 | `ip` | Raw IP address, tokenized before persistence |
 | `locale` | Locale string such as `en_US` |
 | `app_version` | Semantic application version; major version is extracted |
+| `event_time_utc` | Optional event timestamp used for preview and future warehouse partitioning |
+| `auth_result` | Optional authentication outcome, `success` or `failure` |
+| `risk_band` | Optional operational risk band, `low`, `medium`, or `high` |
 
 Malformed events are rejected into quarantine with the original payload and error message. They are not silently coerced into placeholder values.
 
@@ -216,3 +220,20 @@ The next implementation target is to expand this into a full technical portfolio
 8. Public portfolio route at the planned slug.
 
 The system will remain local-first. Real cloud services are optional and should only be enabled after the local path is working and tested.
+
+## Public Surface Contents
+
+The deployed page is a technical surface, not only a landing page. It currently exposes:
+
+| Section | Backing asset |
+|---|---|
+| Platform overview | `demo_api.platform_summary` |
+| Data flow | `demo_api.flow` |
+| Live transform preview | `sample_data/login_events.jsonl` plus `pramanaledger.transform` |
+| Data table browser | `demo_api.table_preview` |
+| PostgreSQL schema viewer | `sql/001_secure_login_schema.sql` |
+| Source contract viewer | `contracts/v1/login_event.schema.json` |
+| Quality and privacy gates | `demo_api.quality_gates` |
+| Knowledge bank | `docs/wiki/pramanaledger_knowledge_bank.md` |
+
+The sample dataset is deterministic synthetic authentication telemetry. It is intentionally generated rather than scraped from public user activity because authentication logs are sensitive by nature and public samples are often licensed, stale, or stripped of useful operational fields.

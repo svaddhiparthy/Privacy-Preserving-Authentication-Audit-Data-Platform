@@ -26,6 +26,8 @@ class TransformEventTests(unittest.TestCase):
         self.assertEqual(result["masked_device_id"], hmac_value("A1B2C3D4", "local-demo-secret"))
         self.assertEqual(result["masked_ip"], hmac_value("192.168.1.10", "local-demo-secret"))
         self.assertEqual(result["app_version"], 5)
+        self.assertEqual(result["auth_result"], "success")
+        self.assertEqual(result["risk_band"], "low")
         self.assertEqual(result["create_date"].isoformat(), "2026-04-23")
         self.assertEqual(result["pii_strategy"], "hmac_sha256_secret_salted")
 

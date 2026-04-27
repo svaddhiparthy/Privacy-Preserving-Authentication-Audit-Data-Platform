@@ -1,105 +1,77 @@
 ====== Privacy Preserving Authentication Audit Data Platform ======
 
-===== Page Status =====
+===== Project Thesis =====
 
-This page is the project documentation source for the PramanaLedger build. It is DokuWiki-ready and can be copied under the existing PII ingestion project page when direct wiki filesystem access is available.
+PramanaLedger is a privacy-preserving authentication audit data platform. The platform accepts authentication telemetry, validates the source contract, tokenizes sensitive identifiers, stores curated analytical records, preserves rejected records in quarantine, and writes batch-level audit evidence.
 
-===== Project Identity =====
+The project is designed as a banking-style data engineering system. The primary artifact is the governed data flow, not a decorative landing page.
 
-Formal name:
+===== Implemented Scope =====
 
-  * Privacy Preserving Authentication Audit Data Platform
+^ Capability ^ Current state ^ Evidence ^
+| Source contract | Implemented | contracts/v1/login_event.schema.json |
+| Queue-backed ingestion | Implemented locally | src/pramanaledger/sqs.py |
+| Validation layer | Implemented | src/pramanaledger/transform.py |
+| PII tokenization | Implemented | src/pramanaledger/tokenization.py |
+| Curated persistence | Implemented | src/pramanaledger/postgres.py |
+| Quarantine persistence | Implemented | secure_login.quarantine_login_events |
+| Batch audit evidence | Implemented | secure_login.ingestion_audit |
+| Health endpoint | Implemented | /healthz |
+| Public technical surface | Implemented | FastAPI, Docker, Caddy |
+| Synthetic telemetry set | Implemented | sample_data/login_events.jsonl |
 
-Internal name:
+===== Source Data Strategy =====
 
-  * PramanaLedger
+The live page uses deterministic synthetic authentication telemetry. This is deliberate. Real login-event datasets are usually sensitive, licensed, stale, or stripped of the exact operational fields needed to demonstrate privacy engineering.
 
-Public slug:
+The generated feed includes user identifiers, device types, raw device identifiers, IP-like addresses, locales, application versions, event timestamps, authentication outcomes, and risk bands. The raw fields are sufficient to demonstrate validation, tokenization, replay-safe identity, curated table loading, and operational metrics.
 
-  * privacy-preserving-authentication-audit-data-platform
+===== Why HMAC Tokenization =====
 
-Planned public route:
+Plain hashes are weak for small input spaces. IPv4 addresses and common device identifiers can be dictionary-attacked. PramanaLedger uses secret-keyed HMAC-SHA256 so the token is stable for analytics but not useful without the secret.
 
-  * https://surya.vaddhiparthy.com/privacy-preserving-authentication-audit-data-platform
+This keeps routine reporting away from raw IP and device identifiers while still allowing the same token to be joined across repeated login events.
 
-===== Current Implementation =====
+===== Event Identity and Replay Safety =====
 
-The current implementation consumes login-event messages from an SQS-compatible queue, validates the event shape, tokenizes sensitive fields, writes idempotent curated records into PostgreSQL, quarantines invalid records, and records batch-level audit evidence.
+The event identity is derived from a canonical source-event hash and a secret HMAC key. If the same event is replayed, it produces the same event_id. PostgreSQL enforces idempotency with ON CONFLICT DO NOTHING, so replay safety exists at the storage boundary.
 
-Implemented components:
+===== Validation and Quarantine =====
 
-^ Component ^ Status ^ Location ^
-| SQS ingestion | Working locally | src/pramanaledger/sqs.py |
-| Contract validation | Working | src/pramanaledger/transform.py |
-| HMAC tokenization | Working | src/pramanaledger/tokenization.py |
-| PostgreSQL persistence | Working | src/pramanaledger/postgres.py |
-| Batch runner | Working | src/pramanaledger/runner.py |
-| Demo API | Working locally | demo_api.py |
-| Unit tests | Working | tests/test_code_fetch_vaddhiparthy.py |
-
-===== Current Data Flow =====
-
-<code>
-Login Events JSON
-        |
-        v
-LocalStack SQS
-        |
-        v
-Ingestion Worker
-        |
-        +--> validate event contract
-        +--> reject malformed events to quarantine
-        +--> tokenize IP and device identifiers
-        +--> generate deterministic event_id
-        |
-        v
-PostgreSQL secure_login schema
-        |
-        +--> user_logins
-        +--> quarantine_login_events
-        +--> ingestion_audit
-</code>
+The validation layer enforces required fields, device type domain checks, authentication outcome checks, risk-band checks, and parseable application versions. Invalid records are rejected rather than silently coerced.
 
 ===== Database Model =====
 
-Primary schema:
+^ Object ^ Purpose ^
+| secure_login.user_logins | Curated authentication fact table with tokenized identifiers |
+| secure_login.quarantine_login_events | Rejected payload table with validation reason |
+| secure_login.ingestion_audit | Batch control table with received, loaded, and rejected counts |
+| secure_login.vw_ingestion_health | Operational rollup for latest load and cumulative counts |
 
-  * secure_login
+===== Quality Controls =====
 
-Tables:
+^ Control ^ Purpose ^
+| Required field validation | Prevents partial login records from entering curated storage |
+| Device type domain check | Keeps downstream dimensions controlled |
+| Version parsing | Converts semantic version strings into analyzable major versions |
+| HMAC tokenization | Removes raw IP and device identifiers from curated storage |
+| Deterministic event ID | Makes replay safe |
+| Quarantine table | Preserves bad records and failure reasons |
+| Ingestion audit table | Provides operational evidence for each batch |
 
-^ Table ^ Purpose ^
-| secure_login.user_logins | Curated login-event records with tokenized sensitive fields |
-| secure_login.quarantine_login_events | Rejected payloads and validation reasons |
-| secure_login.ingestion_audit | Batch start/end timestamps, received count, loaded count, rejected count |
+===== Planned Expansion =====
 
-===== Target Expansion =====
+^ Module ^ Purpose ^ Status ^
+| PII vault | Controlled re-identification and access audit | Planned |
+| Bronze/Silver/Gold layers | Analytical data platform structure | Planned |
+| dbt | Transformation tests, documentation, and lineage | Planned |
+| Airflow | Scheduling, retries, backfills, and DAG evidence | Planned |
+| S3 retention | Immutable landing and retained audit exports | Planned |
+| Streamlit control room | Rich operational surface | Planned |
+| Monitoring | Freshness, reject rate, throughput, endpoint health | Planned |
 
-The project will be expanded using the same operating pattern as FinLens: local-first runtime, governed layers, technical surface, wiki knowledge bank, operational evidence, and clean deployment.
+===== Data Source Expansion Options =====
 
-Target slices:
+The safest near-term enhancement is deterministic synthetic telemetry plus stable public reference dimensions. Recommended candidates are ISO country and locale references, public autonomous-system reference tables, device taxonomy mappings, NIST privacy and security control references, and carefully reviewed public cyber-range logs.
 
-  - Source contract registry.
-  - PII vault with controlled re-identification.
-  - Bronze, Silver, and Gold data layers.
-  - dbt models and privacy tests.
-  - Airflow orchestration.
-  - Streamlit operational and technical surfaces.
-  - FastAPI health and evidence endpoints.
-  - Public route under the portfolio domain.
-
-===== Non-Negotiable Rules =====
-
-  * Raw IP addresses and raw device identifiers must not enter analytical marts.
-  * Secrets must remain in environment variables or ignored secret stores.
-  * Invalid records must be quarantined with a reason instead of silently coerced.
-  * Replays must be idempotent.
-  * Public documentation must describe implemented behavior and clearly label planned work.
-  * Local execution must remain possible without paid cloud services.
-
-===== Working Notes =====
-
-Directional updates belong in the sibling page:
-
-  * privacy_preserving_authentication_audit_data_platform_working_notes
+The project should not scrape random public pages for login events. Authentication logs are privacy-sensitive by design, and a brittle public feed would weaken the credibility of the platform.
