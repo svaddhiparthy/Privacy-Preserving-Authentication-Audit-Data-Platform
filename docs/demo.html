@@ -221,6 +221,7 @@
         <h2>Source Registry</h2>
         <p class="lead">The platform is now wired for a real authentication research dataset. The running page uses the local fixture until the RBA dataset is downloaded and normalized, then switches to the normalized RBA sample automatically.</p>
         <div class="card" id="active-source"></div>
+        <div class="grid-3" id="offline-artifact-metrics" style="margin:16px 0;"></div>
         <div class="table-wrap" id="source-registry"></div>
       </section>
 
@@ -419,11 +420,21 @@
           </div>`).join("");
 
         const sources = await json("api/source-registry");
+        const artifacts = await json("api/offline-artifacts");
         document.getElementById("active-source").innerHTML = `
           <span class="badge"><span class="dot"></span> Active source</span>
           <h3 style="margin-top:10px;">${escapeHtml(sources.active_source.name)}</h3>
           <p class="lead">${escapeHtml(sources.active_source.records)} records loaded from ${escapeHtml(sources.active_source.path)}</p>
         `;
+        const metricCards = artifacts.available ? [
+          ["Offline records processed", artifacts.metrics.records_processed],
+          ["Unique users", artifacts.metrics.unique_users],
+          ["Auth failures", artifacts.metrics.auth_result_counts?.failure ?? 0],
+          ["High risk events", artifacts.metrics.risk_band_counts?.high ?? 0],
+          ["Top country", Object.keys(artifacts.metrics.top_countries ?? {})[0] ?? "n/a"],
+          ["Execution seconds", artifacts.audit.execution_seconds]
+        ] : [["Offline artifacts", "not available"]];
+        document.getElementById("offline-artifact-metrics").innerHTML = metricCards.map(([label, value]) => `<div class="card"><div class="metric">${escapeHtml(value)}</div><div class="muted">${escapeHtml(label)}</div></div>`).join("");
         document.getElementById("source-registry").innerHTML = `<table><thead><tr><th>Source</th><th>Provider</th><th>Status</th><th>Fit</th></tr></thead><tbody>${sources.available_sources.map((source) => `<tr><td><strong>${escapeHtml(source.name)}</strong><br><span class="muted">${escapeHtml(source.dataset_ref)}</span></td><td>${escapeHtml(source.provider)}<br><span class="muted">${escapeHtml(source.license)}</span></td><td>${escapeHtml(source.status)}</td><td>${escapeHtml(source.why_it_fits)}</td></tr>`).join("")}</tbody></table>`;
 
         const tables = await json("api/table-preview");

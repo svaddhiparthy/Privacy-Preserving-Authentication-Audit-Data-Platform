@@ -17,7 +17,7 @@ RBA_COLUMNS = {
     "device_type": ["Device Type", "device_type"],
     "user_id": ["User ID", "user_id"],
     "login_timestamp": ["Login Timestamp", "login_timestamp"],
-    "rtt_ms": ["Round-Trip Time (RTT) [ms]", "rtt_ms"],
+    "rtt_ms": ["Round-Trip Time (RTT) [ms]", "Round-Trip Time [ms]", "rtt_ms"],
     "login_successful": ["Login Successful", "login_successful"],
     "is_attack_ip": ["Is Attack IP", "is_attack_ip"],
     "is_account_takeover": ["Is Account Takeover", "is_account_takeover"],

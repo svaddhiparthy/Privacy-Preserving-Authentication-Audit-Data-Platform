@@ -121,3 +121,24 @@ The primary external dataset target is the Login Data Set for Risk-Based Authent
 The adapter is implemented in `src/pramanaledger/sources.py`. It normalizes the Kaggle or Zenodo CSV/zip into the same JSONL contract used by the ingestion worker. The API checks for `data/external/rba/login_events.normalized.jsonl` and uses that file when present; otherwise, it falls back to the repository fixture.
 
 The full RBA dataset is intentionally not committed because it is large. The repository carries the adapter, contract mapping, and activation instructions.
+
+## Offline Execution Evidence
+
+The project has a local-only RBA execution script:
+
+```text
+scripts/run_offline_rba_pipeline.py
+```
+
+It reads the downloaded RBA zip directly from disk, streams rows through the source adapter, executes the same transform code used by the service, and writes local artifacts. No AWS, S3, hosted queues, or remote warehouses are used in this mode.
+
+The latest run processed 100,000 RBA records and wrote:
+
+```text
+docs/artifacts/rba_offline/offline_run_manifest.json
+docs/artifacts/rba_offline/offline_run_metrics.json
+docs/artifacts/rba_offline/table_inventory.json
+docs/artifacts/rba_offline/audit_ingestion_runs.csv
+docs/artifacts/rba_offline/bronze_rba_login_events_sample.jsonl
+docs/artifacts/rba_offline/silver_user_logins_sample.jsonl
+```
