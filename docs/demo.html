@@ -87,12 +87,12 @@
     </main>
     <script>
       document.getElementById("load").addEventListener("click", async () => {
-        const response = await fetch("/api/sample-transform");
+        const response = await fetch("api/sample-transform");
         document.getElementById("output").textContent = JSON.stringify(await response.json(), null, 2);
       });
       async function hydrateStack() {
-        const stack = await (await fetch("/api/stack")).json();
-        const gates = await (await fetch("/api/quality-gates")).json();
+        const stack = await (await fetch("api/stack")).json();
+        const gates = await (await fetch("api/quality-gates")).json();
         const renderTools = (id, items) => {
           document.getElementById(id).innerHTML = items.map(item => `<li><b>${item.tool}</b><span>${item.role}</span></li>`).join("");
         };
