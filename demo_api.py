@@ -32,6 +32,16 @@ def demo_page() -> str:
     return Path("docs/demo.html").read_text(encoding="utf-8")
 
 
+@app.get("/health")
+def health() -> dict:
+    return {"status": "ok", "service": "pramanaledger-demo"}
+
+
+@app.get("/healthz")
+def healthz() -> dict:
+    return {"status": "ok", "service": "pramanaledger-demo"}
+
+
 @app.get("/api/architecture")
 def architecture() -> dict:
     return {
@@ -44,7 +54,7 @@ def architecture() -> dict:
             "quarantine for rejected records",
             "batch audit and freshness metrics",
         ],
-        "resume_positioning": "Secure event ingestion platform with privacy controls, idempotent writes, observability, and auditability.",
+        "system_positioning": "Secure event ingestion platform with privacy controls, idempotent writes, observability, and auditability.",
     }
 
 
@@ -61,11 +71,10 @@ def stack() -> dict:
         ],
         "next_level": [
             {"tool": "dbt", "role": "Bronze/silver/gold transformations and data tests"},
-            {"tool": "Great Expectations", "role": "Contract validation, distribution checks, and quality reports"},
             {"tool": "Airflow or Dagster", "role": "Orchestration, retries, backfills, and dependency graph"},
             {"tool": "OpenLineage-compatible events", "role": "Dataset/job/run lineage model for pipeline observability"},
             {"tool": "Prometheus + Grafana", "role": "Ingestion lag, reject rate, throughput, and SLA dashboards"},
-            {"tool": "Kafka-compatible mode", "role": "Streaming path for higher-volume telemetry ingestion"},
+            {"tool": "Streaming mode", "role": "Higher-volume authentication-event ingestion path"},
         ],
     }
 
