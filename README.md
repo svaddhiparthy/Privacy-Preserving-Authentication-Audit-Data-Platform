@@ -85,6 +85,12 @@ Each login event must include:
 
 Malformed events are rejected into quarantine with the original payload and error message. They are not silently coerced into placeholder values.
 
+The current JSON Schema contract is stored at:
+
+```text
+contracts/v1/login_event.schema.json
+```
+
 ## Database Model
 
 Target schema:
@@ -188,6 +194,12 @@ Compile the Python modules:
 ```powershell
 Get-ChildItem src\pramanaledger\*.py | ForEach-Object { python -m py_compile $_.FullName }
 python -m py_compile code_fetch_vaddhiparthy.py demo_api.py
+```
+
+Run the smoke script:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke_test.ps1
 ```
 
 ## Planned Expansion
