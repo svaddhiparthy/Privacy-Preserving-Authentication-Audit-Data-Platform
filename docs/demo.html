@@ -200,6 +200,7 @@
       <nav class="nav">
         <div class="nav-inner">
           <a href="#overview">Overview</a>
+          <a href="#sources">Sources</a>
           <a href="#flow">Data Flow</a>
           <a href="#transform">Transform Preview</a>
           <a href="#tables">Data Tables</a>
@@ -214,6 +215,13 @@
         <h2>Platform Overview</h2>
         <p class="lead" id="purpose"></p>
         <div class="grid-3" id="control-cards"></div>
+      </section>
+
+      <section class="section" id="sources">
+        <h2>Source Registry</h2>
+        <p class="lead">The platform is now wired for a real authentication research dataset. The running page uses the local fixture until the RBA dataset is downloaded and normalized, then switches to the normalized RBA sample automatically.</p>
+        <div class="card" id="active-source"></div>
+        <div class="table-wrap" id="source-registry"></div>
       </section>
 
       <section class="section" id="flow">
@@ -409,6 +417,14 @@
             <p class="muted"><strong>${escapeHtml(stage.tooling)}</strong></p>
             <p class="muted">${escapeHtml(stage.output)}</p>
           </div>`).join("");
+
+        const sources = await json("api/source-registry");
+        document.getElementById("active-source").innerHTML = `
+          <span class="badge"><span class="dot"></span> Active source</span>
+          <h3 style="margin-top:10px;">${escapeHtml(sources.active_source.name)}</h3>
+          <p class="lead">${escapeHtml(sources.active_source.records)} records loaded from ${escapeHtml(sources.active_source.path)}</p>
+        `;
+        document.getElementById("source-registry").innerHTML = `<table><thead><tr><th>Source</th><th>Provider</th><th>Status</th><th>Fit</th></tr></thead><tbody>${sources.available_sources.map((source) => `<tr><td><strong>${escapeHtml(source.name)}</strong><br><span class="muted">${escapeHtml(source.dataset_ref)}</span></td><td>${escapeHtml(source.provider)}<br><span class="muted">${escapeHtml(source.license)}</span></td><td>${escapeHtml(source.status)}</td><td>${escapeHtml(source.why_it_fits)}</td></tr>`).join("")}</tbody></table>`;
 
         const tables = await json("api/table-preview");
         const select = document.getElementById("table-select");
