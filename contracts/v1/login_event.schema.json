@@ -36,6 +36,18 @@
     "app_version": {
       "type": "string",
       "pattern": "^[0-9]+(\\.[0-9]+){0,2}$"
+    },
+    "event_time_utc": {
+      "type": "string",
+      "minLength": 1
+    },
+    "auth_result": {
+      "type": "string",
+      "enum": ["success", "failure"]
+    },
+    "risk_band": {
+      "type": "string",
+      "enum": ["low", "medium", "high"]
     }
   }
 }

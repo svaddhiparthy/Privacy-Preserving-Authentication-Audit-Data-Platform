@@ -28,6 +28,9 @@ def ensure_table_exists(cursor, schema: str = "secure_login") -> None:
             masked_ip varchar(256) NOT NULL,
             masked_device_id varchar(256) NOT NULL,
             locale varchar(32) NOT NULL,
+            event_time_utc varchar(64) NOT NULL,
+            auth_result varchar(16) NOT NULL,
+            risk_band varchar(16) NOT NULL,
             app_version integer NOT NULL,
             app_version_raw varchar(64) NOT NULL,
             source_event_hash varchar(128) NOT NULL,
@@ -67,12 +70,13 @@ def insert_events(cursor, rows: list[dict[str, Any]], schema: str = "secure_logi
         f"""
         INSERT INTO {schema}.user_logins (
             event_id, batch_id, user_id, device_type, masked_ip, masked_device_id,
-            locale, app_version, app_version_raw, source_event_hash, pii_strategy,
-            create_date, ingested_at_utc
+            locale, event_time_utc, auth_result, risk_band, app_version, app_version_raw,
+            source_event_hash, pii_strategy, create_date, ingested_at_utc
         ) VALUES (
             %(event_id)s, %(batch_id)s, %(user_id)s, %(device_type)s, %(masked_ip)s,
-            %(masked_device_id)s, %(locale)s, %(app_version)s, %(app_version_raw)s,
-            %(source_event_hash)s, %(pii_strategy)s, %(create_date)s, %(ingested_at_utc)s
+            %(masked_device_id)s, %(locale)s, %(event_time_utc)s, %(auth_result)s,
+            %(risk_band)s, %(app_version)s, %(app_version_raw)s, %(source_event_hash)s,
+            %(pii_strategy)s, %(create_date)s, %(ingested_at_utc)s
         )
         ON CONFLICT (event_id) DO NOTHING
         """,
