@@ -174,6 +174,8 @@
       .wiki-article ul { color:#344054; line-height:1.7; }
       .wiki-article code { background:#f1e4d3; border:1px solid var(--border); border-radius:6px; padding:1px 5px; }
       .table-wrap { overflow:auto; border:1px solid var(--border); border-radius:14px; background:rgba(255,250,243,.9); }
+      .transformed-cell { background:#e6f3ef; color:#064e3b; font-weight:800; }
+      .inline-link { color:var(--accent); font-weight:800; text-decoration:none; border-bottom:1px solid rgba(13,95,104,.35); }
       .muted { color:var(--muted); }
       footer { padding:28px 0; color:var(--muted); font-size:.88rem; }
       @media (max-width: 920px) {
@@ -252,12 +254,15 @@
 
       <section class="section" id="tables">
         <h2>Data Tables</h2>
-        <p class="lead">The browser exposes the three implemented PostgreSQL objects used by the ingestion path: curated login facts, audit evidence, and quarantine records.</p>
+        <p class="lead">The browser shows compact 10-row previews only. The full 1.1 GB RBA source dataset is linked in Source Registry and is not hosted inside this page.</p>
         <div class="toolbar">
-          <label for="table-select"><strong>Select table</strong></label>
+          <label for="table-group-select"><strong>Data stage</strong></label>
+          <select id="table-group-select"></select>
+          <label for="table-select"><strong>Table</strong></label>
           <select id="table-select"></select>
         </div>
         <p class="lead" id="table-purpose"></p>
+        <p class="lead" id="table-highlight"></p>
         <div class="table-wrap" id="table-preview"></div>
       </section>
 
@@ -332,10 +337,10 @@
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
 
-      function renderRows(rows) {
+      function renderRows(rows, transformedColumns = []) {
         if (!rows || rows.length === 0) return `<p class="lead" style="padding:16px;">No rows are present in the sample preview for this table.</p>`;
         const columns = Object.keys(rows[0]);
-        return `<table><thead><tr>${columns.map((c) => `<th>${escapeHtml(c)}</th>`).join("")}</tr></thead><tbody>${rows.map((row) => `<tr>${columns.map((c) => `<td>${escapeHtml(typeof row[c] === "object" ? JSON.stringify(row[c]) : row[c])}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+        return `<table><thead><tr>${columns.map((c) => `<th>${escapeHtml(c)}</th>`).join("")}</tr></thead><tbody>${rows.map((row) => `<tr>${columns.map((c) => `<td class="${transformedColumns.includes(c) ? "transformed-cell" : ""}">${escapeHtml(typeof row[c] === "object" ? JSON.stringify(row[c]) : row[c])}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
       }
 
       function renderToolList(items) {
@@ -435,17 +440,29 @@
           ["Execution seconds", artifacts.audit.execution_seconds]
         ] : [["Offline artifacts", "not available"]];
         document.getElementById("offline-artifact-metrics").innerHTML = metricCards.map(([label, value]) => `<div class="card"><div class="metric">${escapeHtml(value)}</div><div class="muted">${escapeHtml(label)}</div></div>`).join("");
-        document.getElementById("source-registry").innerHTML = `<table><thead><tr><th>Source</th><th>Provider</th><th>Status</th><th>Fit</th></tr></thead><tbody>${sources.available_sources.map((source) => `<tr><td><strong>${escapeHtml(source.name)}</strong><br><span class="muted">${escapeHtml(source.dataset_ref)}</span></td><td>${escapeHtml(source.provider)}<br><span class="muted">${escapeHtml(source.license)}</span></td><td>${escapeHtml(source.status)}</td><td>${escapeHtml(source.why_it_fits)}</td></tr>`).join("")}</tbody></table>`;
+        document.getElementById("source-registry").innerHTML = `<table><thead><tr><th>Source</th><th>Provider</th><th>Links</th><th>Status</th><th>Fit</th></tr></thead><tbody>${sources.available_sources.map((source) => `<tr><td><strong>${escapeHtml(source.name)}</strong><br><span class="muted">${escapeHtml(source.dataset_ref)}</span></td><td>${escapeHtml(source.provider)}<br><span class="muted">${escapeHtml(source.license)}</span></td><td>${source.kaggle_url ? `<a class="inline-link" href="${escapeHtml(source.kaggle_url)}" target="_blank" rel="noreferrer">Kaggle</a><br>` : ""}${source.zenodo_url ? `<a class="inline-link" href="${escapeHtml(source.zenodo_url)}" target="_blank" rel="noreferrer">Zenodo</a>` : ""}</td><td>${escapeHtml(source.status)}</td><td>${escapeHtml(source.why_it_fits)}</td></tr>`).join("")}</tbody></table>`;
 
         const tables = await json("api/table-preview");
+        const groupSelect = document.getElementById("table-group-select");
         const select = document.getElementById("table-select");
-        select.innerHTML = tables.tables.map((table, i) => `<option value="${i}">${escapeHtml(table.name)}</option>`).join("");
-        const renderTable = () => {
-          const selected = tables.tables[Number(select.value)];
-          document.getElementById("table-purpose").textContent = selected.purpose;
-          document.getElementById("table-preview").innerHTML = renderRows(selected.sample_rows);
+        const groups = Object.keys(tables.groups);
+        groupSelect.innerHTML = groups.map((group) => `<option value="${escapeHtml(group)}">${escapeHtml(group)}</option>`).join("");
+        const populateTables = () => {
+          const group = groupSelect.value;
+          select.innerHTML = tables.groups[group].map((table, i) => `<option value="${i}">${escapeHtml(table.name)}</option>`).join("");
         };
+        const renderTable = () => {
+          const selected = tables.groups[groupSelect.value][Number(select.value)];
+          document.getElementById("table-purpose").textContent = selected.purpose;
+          document.getElementById("table-highlight").textContent = `${selected.highlight} Preview policy: ${tables.preview_policy}`;
+          document.getElementById("table-preview").innerHTML = renderRows(selected.sample_rows, selected.transformed_columns ?? []);
+        };
+        groupSelect.addEventListener("change", () => {
+          populateTables();
+          renderTable();
+        });
         select.addEventListener("change", renderTable);
+        populateTables();
         renderTable();
 
         const gates = await json("api/quality-gates");

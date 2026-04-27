@@ -112,6 +112,6 @@ Recommended public reference candidates:
 | NIST privacy/security control references | Documentation mapping | Low |
 | Public cyber ranges or authentication logs | Larger realism, but license and schema must be reviewed | Medium |
 
-## Implementation Discipline
+## Delivery Controls
 
-The platform should continue to separate implemented behavior from planned expansion. Public pages should never imply that Airflow, dbt, S3, or a PII vault are live until the code path exists and passes smoke tests. The current site therefore marks those items as planned expansion while showing working evidence for the implemented ingestion path.
+The platform separates delivered capabilities from planned enhancements. Public documentation names a component as implemented only when the code path exists, the relevant artifact is packaged, and the smoke checks pass. Components such as Airflow, dbt, S3 retention, and a PII vault remain roadmap items until they have executable evidence.

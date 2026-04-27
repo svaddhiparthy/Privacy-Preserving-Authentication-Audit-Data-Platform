@@ -32,6 +32,32 @@ def _read_text(path: str) -> str:
     return (PROJECT_ROOT / path).read_text(encoding="utf-8")
 
 
+def _read_jsonl(path: Path, limit: int = 10) -> list[dict]:
+    if not path.exists():
+        return []
+    rows = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            rows.append(json.loads(line))
+        if len(rows) >= limit:
+            break
+    return rows
+
+
+def _read_csv_rows(path: Path, limit: int = 10) -> list[dict]:
+    if not path.exists():
+        return []
+    import csv
+
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        rows = []
+        for row in csv.DictReader(handle):
+            rows.append(dict(row))
+            if len(rows) >= limit:
+                break
+        return rows
+
+
 def _sample_events() -> list[dict]:
     external = PROJECT_ROOT / "data" / "external" / "rba" / "login_events.normalized.jsonl"
     packaged_artifact = PROJECT_ROOT / "docs" / "artifacts" / "rba_offline" / "bronze_rba_login_events_sample.jsonl"
@@ -149,6 +175,8 @@ def source_registry() -> dict:
                 "status": "adapter implemented; activate by placing the zip or CSV under data/external/rba and running scripts/prepare_rba_dataset.py",
                 "dataset_ref": "dasgroup/rba-dataset",
                 "doi": "10.5281/zenodo.6782156",
+                "kaggle_url": "https://www.kaggle.com/datasets/dasgroup/rba-dataset",
+                "zenodo_url": "https://zenodo.org/records/6782156",
                 "why_it_fits": "Synthesized login-attempt data with IP, country, ASN, user agent, device type, user ID, timestamp, RTT, login success, attack IP, and account takeover flags.",
             },
             {
@@ -158,6 +186,8 @@ def source_registry() -> dict:
                 "status": "active fallback",
                 "dataset_ref": "sample_data/login_events.jsonl",
                 "doi": None,
+                "kaggle_url": None,
+                "zenodo_url": None,
                 "why_it_fits": "Small, safe authentication telemetry fixture for tests, demos, and production page fallback.",
             },
         ],
@@ -344,51 +374,58 @@ def sample_transform() -> dict:
 
 @app.get("/api/table-preview")
 def table_preview() -> dict:
+    artifact_root = PROJECT_ROOT / "docs" / "artifacts" / "rba_offline"
+    bronze_rows = _read_jsonl(artifact_root / "bronze_rba_login_events_sample.jsonl", limit=10)
+    silver_rows = _read_jsonl(artifact_root / "silver_user_logins_sample.jsonl", limit=10)
+    audit_rows = _read_csv_rows(artifact_root / "audit_ingestion_runs.csv", limit=10)
     return {
-        "tables": [
-            {
-                "name": "secure_login.user_logins",
-                "purpose": "Curated analytics-ready login fact table with sensitive identifiers tokenized.",
-                "columns": [
-                    "event_id",
-                    "batch_id",
-                    "user_id",
-                    "device_type",
-                    "masked_ip",
-                    "masked_device_id",
-                    "locale",
-                    "event_time_utc",
-                    "auth_result",
-                    "risk_band",
-                    "app_version",
-                    "app_version_raw",
-                    "source_event_hash",
-                    "pii_strategy",
-                    "create_date",
-                    "ingested_at_utc",
-                ],
-                "sample_rows": _transformed_events()[:12],
-            },
-            {
-                "name": "secure_login.ingestion_audit",
-                "purpose": "Batch control table for load counts, reject counts, and freshness evidence.",
-                "columns": [
-                    "batch_id",
-                    "started_at_utc",
-                    "completed_at_utc",
-                    "messages_received",
-                    "records_loaded",
-                    "records_rejected",
-                ],
-                "sample_rows": _audit_rows(),
-            },
-            {
-                "name": "secure_login.quarantine_login_events",
-                "purpose": "Rejected payloads with error messages for operational triage and replay governance.",
-                "columns": ["quarantine_id", "batch_id", "rejected_at_utc", "error_message", "payload"],
-                "sample_rows": [],
-            },
-        ]
+        "preview_policy": "Only the first 10 rows are displayed for efficiency. The full public source dataset is linked in Source Registry; the local full zip is not hosted by this page.",
+        "source_dataset_url": "https://www.kaggle.com/datasets/dasgroup/rba-dataset",
+        "groups": {
+            "Input": [
+                {
+                    "name": "bronze_rba_login_events",
+                    "purpose": "Input-stage records normalized from the RBA dataset before privacy tokenization.",
+                    "highlight": "Raw source features are visible here so the transformation boundary is clear.",
+                    "columns": list(bronze_rows[0]) if bronze_rows else [],
+                    "sample_rows": bronze_rows,
+                }
+            ],
+            "Output": [
+                {
+                    "name": "silver_user_logins",
+                    "purpose": "Output-stage records after validation, deterministic event identity, and HMAC tokenization.",
+                    "highlight": "Transformed values are highlighted: raw IP and device identifiers are replaced by masked tokens.",
+                    "columns": list(silver_rows[0]) if silver_rows else [],
+                    "sample_rows": silver_rows,
+                    "transformed_columns": ["event_id", "masked_ip", "masked_device_id", "source_event_hash", "pii_strategy"],
+                },
+                {
+                    "name": "secure_login.user_logins",
+                    "purpose": "Runtime curated login fact table produced by the same transform function.",
+                    "highlight": "This is the application-facing version of the curated login table.",
+                    "columns": list(_transformed_events()[0]) if _transformed_events() else [],
+                    "sample_rows": _transformed_events()[:10],
+                    "transformed_columns": ["event_id", "masked_ip", "masked_device_id", "source_event_hash", "pii_strategy"],
+                },
+            ],
+            "Audit": [
+                {
+                    "name": "audit_ingestion_runs",
+                    "purpose": "Offline execution audit evidence with source path, timing, received count, loaded count, and rejected count.",
+                    "highlight": "This proves the local offline run executed and captured load evidence.",
+                    "columns": list(audit_rows[0]) if audit_rows else [],
+                    "sample_rows": audit_rows,
+                },
+                {
+                    "name": "secure_login.quarantine_login_events",
+                    "purpose": "Rejected payloads and validation reasons. The latest 100,000-row offline run had zero rejected rows.",
+                    "highlight": "Empty here means no records failed validation in the displayed offline slice.",
+                    "columns": ["quarantine_id", "batch_id", "rejected_at_utc", "error_message", "payload"],
+                    "sample_rows": [],
+                },
+            ],
+        },
     }
 
 
