@@ -3,104 +3,384 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Secure Login Events Ingestion</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap">
+    <title>Privacy Preserving Authentication Audit Data Platform</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Source+Serif+4:wght@600;700&display=swap">
     <style>
-      :root { --bg:#f4ede3; --panel:#fffaf3; --border:#e4d7c6; --text:#1f2933; --muted:#6a6b74; --accent:#0f5f70; --warm:#bf6d47; }
+      :root {
+        --bg:#f4ede3;
+        --panel:#fffaf3;
+        --panel-strong:#fff6e8;
+        --ink:#18212b;
+        --muted:#667085;
+        --border:#dfd0bd;
+        --accent:#0d5f68;
+        --accent-soft:#d9eceb;
+        --warm:#b8613e;
+        --green:#136f4b;
+        --code:#111827;
+        --code-ink:#e5e7eb;
+      }
       * { box-sizing:border-box; }
-      body { margin:0; font-family:Manrope,Segoe UI,sans-serif; color:var(--text); background:linear-gradient(180deg,#f6efe6,#f2e9dd); }
-      main { width:min(1180px, calc(100vw - 40px)); margin:0 auto; padding:56px 0; }
-      header { display:grid; grid-template-columns:1.1fr .9fr; gap:28px; align-items:end; margin-bottom:30px; }
-      h1 { margin:0; font-size:clamp(2.3rem,5vw,4.8rem); line-height:.98; font-family:Georgia,serif; }
-      .lead { color:var(--muted); line-height:1.7; }
-      .grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
-      .wide-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px; }
-      .card { border:1px solid var(--border); border-radius:14px; background:rgba(255,250,243,.93); padding:18px; box-shadow:0 18px 50px rgba(61,50,38,.10); }
-      .card strong { display:block; margin-bottom:8px; }
-      .metric { font-size:2rem; color:var(--accent); font-weight:800; }
-      .flow { display:grid; grid-template-columns:repeat(6,1fr); gap:8px; margin:18px 0 0; }
-      .flow span { border:1px solid var(--border); border-radius:12px; background:#fffdf9; padding:12px; text-align:center; font-size:.82rem; font-weight:800; }
-      .tool-list { display:grid; gap:10px; margin:0; padding:0; list-style:none; }
-      .tool-list li { display:grid; grid-template-columns:150px 1fr; gap:10px; border-top:1px solid var(--border); padding-top:10px; color:var(--muted); }
-      .tool-list b { color:var(--text); }
-      pre { overflow:auto; border:1px solid var(--border); border-radius:12px; background:#111827; color:#e5e7eb; padding:18px; }
-      button { border:0; border-radius:999px; background:var(--accent); color:white; padding:12px 20px; font-weight:800; cursor:pointer; }
-      @media (max-width: 900px) { header,.grid,.wide-grid,.flow { grid-template-columns:1fr; } .tool-list li { grid-template-columns:1fr; } }
+      html { scroll-behavior:smooth; }
+      body {
+        margin:0;
+        font-family:Manrope,Segoe UI,sans-serif;
+        color:var(--ink);
+        background:
+          radial-gradient(circle at 18% 8%, rgba(184,97,62,.18), transparent 28rem),
+          radial-gradient(circle at 78% 4%, rgba(13,95,104,.18), transparent 32rem),
+          linear-gradient(180deg,#f8f0e5,#f2e8db 55%,#ede1d1);
+      }
+      main { width:min(1240px, calc(100vw - 42px)); margin:0 auto; padding:42px 0 70px; }
+      .hero {
+        display:grid;
+        grid-template-columns:1.05fr .95fr;
+        gap:26px;
+        align-items:end;
+        min-height:410px;
+      }
+      .eyebrow {
+        color:var(--warm);
+        font-weight:800;
+        text-transform:uppercase;
+        letter-spacing:.12em;
+        font-size:.78rem;
+      }
+      h1, h2, h3 { margin:0; }
+      h1 {
+        font-family:"Source Serif 4", Georgia, serif;
+        font-size:clamp(2.7rem,6vw,6.4rem);
+        line-height:.92;
+        letter-spacing:-.06em;
+      }
+      h2 {
+        font-family:"Source Serif 4", Georgia, serif;
+        font-size:clamp(1.8rem,3vw,3rem);
+        line-height:1;
+        letter-spacing:-.035em;
+      }
+      h3 { font-size:1rem; letter-spacing:-.01em; }
+      .lead { color:var(--muted); line-height:1.75; font-size:1rem; }
+      .hero-card, .card, .section {
+        border:1px solid var(--border);
+        border-radius:20px;
+        background:rgba(255,250,243,.92);
+        box-shadow:0 22px 70px rgba(63,52,40,.12);
+      }
+      .hero-card { padding:24px; }
+      .nav {
+        position:sticky;
+        top:0;
+        z-index:10;
+        backdrop-filter:blur(18px);
+        background:rgba(244,237,227,.78);
+        border-bottom:1px solid rgba(223,208,189,.75);
+        margin:0 calc((100vw - min(1240px, calc(100vw - 42px))) / -2);
+        padding:12px calc((100vw - min(1240px, calc(100vw - 42px))) / 2);
+      }
+      .nav-inner { display:flex; gap:10px; overflow:auto; }
+      .nav a {
+        text-decoration:none;
+        color:var(--ink);
+        border:1px solid var(--border);
+        background:rgba(255,250,243,.78);
+        border-radius:999px;
+        padding:9px 13px;
+        white-space:nowrap;
+        font-weight:800;
+        font-size:.82rem;
+      }
+      .grid-3 { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+      .grid-2 { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+      .section { padding:24px; margin-top:18px; }
+      .card { padding:18px; }
+      .metric { font-size:2.2rem; font-weight:800; color:var(--accent); letter-spacing:-.04em; }
+      .flow { display:grid; grid-template-columns:repeat(6,minmax(120px,1fr)); gap:10px; margin-top:16px; overflow:auto; }
+      .flow-card {
+        min-height:142px;
+        border:1px solid var(--border);
+        border-radius:16px;
+        background:linear-gradient(180deg,#fffdf9,#f9efe2);
+        padding:14px;
+        position:relative;
+      }
+      .flow-card::after {
+        content:"";
+        position:absolute;
+        right:-11px;
+        top:50%;
+        width:20px;
+        height:1px;
+        background:var(--accent);
+      }
+      .flow-card:last-child::after { display:none; }
+      .badge {
+        display:inline-flex;
+        align-items:center;
+        gap:7px;
+        border-radius:999px;
+        padding:6px 10px;
+        background:var(--accent-soft);
+        color:#06494f;
+        font-size:.76rem;
+        font-weight:800;
+      }
+      .dot { width:8px; height:8px; border-radius:50%; background:var(--green); display:inline-block; }
+      table { width:100%; border-collapse:collapse; font-size:.86rem; }
+      th, td { text-align:left; vertical-align:top; border-bottom:1px solid var(--border); padding:10px 8px; }
+      th { color:#344054; background:rgba(255,246,232,.8); font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; }
+      pre {
+        overflow:auto;
+        border:1px solid #263244;
+        border-radius:14px;
+        background:var(--code);
+        color:var(--code-ink);
+        padding:16px;
+        line-height:1.55;
+        max-height:520px;
+      }
+      .toolbar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:14px 0; }
+      button, select {
+        border:1px solid var(--border);
+        border-radius:999px;
+        background:#fffaf3;
+        color:var(--ink);
+        padding:10px 14px;
+        font-weight:800;
+      }
+      button { background:var(--accent); color:white; cursor:pointer; border-color:var(--accent); }
+      .plain-button { background:#fffaf3; color:var(--ink); border-color:var(--border); }
+      .wiki-layout { display:grid; grid-template-columns:260px 1fr; gap:18px; }
+      .wiki-nav {
+        border-right:1px solid var(--border);
+        padding-right:16px;
+        position:sticky;
+        top:72px;
+        align-self:start;
+      }
+      .wiki-nav a {
+        display:block;
+        color:var(--ink);
+        text-decoration:none;
+        padding:7px 0;
+        border-bottom:1px solid rgba(223,208,189,.55);
+        font-size:.9rem;
+      }
+      .wiki-body { white-space:pre-wrap; line-height:1.7; color:#28323f; }
+      .table-wrap { overflow:auto; border:1px solid var(--border); border-radius:14px; background:rgba(255,250,243,.9); }
+      .muted { color:var(--muted); }
+      footer { padding:28px 0; color:var(--muted); font-size:.88rem; }
+      @media (max-width: 920px) {
+        .hero, .grid-3, .grid-2, .wiki-layout { grid-template-columns:1fr; }
+        .wiki-nav { position:static; border-right:0; border-bottom:1px solid var(--border); padding-bottom:12px; }
+      }
     </style>
   </head>
   <body>
     <main>
-      <header>
+      <section class="hero" id="top">
         <div>
-          <p style="color:var(--warm);font-weight:800;text-transform:uppercase;">Data Engineering Showcase</p>
-          <h1>Secure Login Events Ingestion</h1>
+          <p class="eyebrow">PramanaLedger</p>
+          <h1>Privacy Preserving Authentication Audit Data Platform</h1>
+          <p class="lead">A governed event-ingestion project for authentication telemetry. The platform demonstrates queue intake, contract validation, PII tokenization, curated persistence, quarantine handling, and batch audit evidence through a working technical surface.</p>
         </div>
-        <p class="lead">A privacy-aware ingestion system that receives login telemetry, validates contracts, tokenizes PII, quarantines bad events, loads an analytics-ready model, and records batch-level audit evidence. The demo is intentionally framed as a production data platform, not a toy script.</p>
-      </header>
-      <section class="card">
-        <strong>Reference Data Platform Flow</strong>
-        <div class="flow">
-          <span>SQS / LocalStack</span>
-          <span>Bronze Raw Event</span>
-          <span>Contract Validation</span>
-          <span>PII Tokenization</span>
-          <span>Silver Login Fact</span>
-          <span>Audit + Quarantine</span>
+        <div class="hero-card">
+          <span class="badge"><span class="dot"></span> Live container deployed</span>
+          <p class="lead">This page is backed by the same transformation module used by the ingestion worker. The sample records below are loaded from repository data, transformed by Python at request time, and displayed through API-backed previews.</p>
+          <div class="grid-3" id="summary-metrics"></div>
         </div>
       </section>
-      <section class="grid">
-        <div class="card"><strong>Ingestion</strong><span class="metric">SQS</span><p class="lead">Queue-backed ingestion with bounded batch controls, visibility timeout, and local cloud emulation.</p></div>
-        <div class="card"><strong>Privacy</strong><span class="metric">HMAC</span><p class="lead">PII fields are secret-salted and irreversibly tokenized before they reach curated tables.</p></div>
-        <div class="card"><strong>Reliability</strong><span class="metric">SLA</span><p class="lead">Idempotent replay, quarantine, reject-rate tracking, freshness checks, and batch audit evidence.</p></div>
-      </section>
-      <section class="wide-grid">
-        <div class="card">
-          <strong>Implemented Stack</strong>
-          <ul class="tool-list" id="current-stack"></ul>
+
+      <nav class="nav">
+        <div class="nav-inner">
+          <a href="#overview">Overview</a>
+          <a href="#flow">Data Flow</a>
+          <a href="#transform">Transform Preview</a>
+          <a href="#tables">Data Tables</a>
+          <a href="#schema">Schema</a>
+          <a href="#quality">Quality Gates</a>
+          <a href="#toolchain">Toolchain</a>
+          <a href="#wiki">Knowledge Bank</a>
         </div>
-        <div class="card">
-          <strong>Enterprise Extension Roadmap</strong>
-          <ul class="tool-list" id="next-stack"></ul>
+      </nav>
+
+      <section class="section" id="overview">
+        <h2>Platform Overview</h2>
+        <p class="lead" id="purpose"></p>
+        <div class="grid-3" id="control-cards"></div>
+      </section>
+
+      <section class="section" id="flow">
+        <h2>End-to-End Data Flow</h2>
+        <p class="lead">The flow is intentionally small but complete: source contract, queue intake, validation, privacy transform, database persistence, and public operational surface.</p>
+        <div class="flow" id="flow-cards"></div>
+      </section>
+
+      <section class="section" id="transform">
+        <h2>Live Transform Preview</h2>
+        <p class="lead">The source sample includes direct identifiers. The curated output replaces sensitive fields with deterministic HMAC tokens and records the source payload hash for replay and audit alignment.</p>
+        <div class="toolbar">
+          <button id="load-transform">Run Transform Preview</button>
+          <button class="plain-button" id="load-source">Show Source Events</button>
+        </div>
+        <div class="grid-2">
+          <div>
+            <h3>Source Payload</h3>
+            <pre id="source-output">Waiting for source sample...</pre>
+          </div>
+          <div>
+            <h3>Curated Output</h3>
+            <pre id="transform-output">Waiting for transform...</pre>
+          </div>
         </div>
       </section>
-      <section class="wide-grid">
-        <div class="card">
-          <strong>Quality Gates</strong>
-          <ul class="tool-list" id="quality-gates"></ul>
+
+      <section class="section" id="tables">
+        <h2>Data Tables</h2>
+        <p class="lead">The browser exposes the three implemented PostgreSQL objects used by the ingestion path: curated login facts, audit evidence, and quarantine records.</p>
+        <div class="toolbar">
+          <label for="table-select"><strong>Select table</strong></label>
+          <select id="table-select"></select>
         </div>
-        <div class="card">
-          <strong>Resume-Grade Talking Points</strong>
-          <ul class="tool-list">
-            <li><b>Lineage</b><span>Model the pipeline as source queue, validation job, tokenization job, curated dataset, quarantine dataset, and audit dataset.</span></li>
-            <li><b>Governance</b><span>Raw PII is intentionally excluded from the durable analytics table.</span></li>
-            <li><b>Recovery</b><span>Replay is safe because event IDs are deterministic and inserts are idempotent.</span></li>
-            <li><b>Operations</b><span>Audit rows enable freshness checks, reject-rate alerting, and batch reconciliation.</span></li>
-          </ul>
+        <p class="lead" id="table-purpose"></p>
+        <div class="table-wrap" id="table-preview"></div>
+      </section>
+
+      <section class="section" id="schema">
+        <h2>Schema and Source Contract</h2>
+        <div class="grid-2">
+          <div>
+            <h3>PostgreSQL Schema</h3>
+            <pre id="sql-schema">Loading schema...</pre>
+          </div>
+          <div>
+            <h3>Login Event Contract</h3>
+            <pre id="source-contract">Loading contract...</pre>
+          </div>
         </div>
       </section>
-      <section class="card" style="margin-top:16px;">
-        <strong>Interactive Transform Preview</strong>
-        <p class="lead">Runs the sample event contract through the same transformation used by the ETL worker.</p>
-        <button id="load">Load Sample Transform</button>
-        <pre id="output">Waiting for sample...</pre>
+
+      <section class="section" id="quality">
+        <h2>Quality and Privacy Gates</h2>
+        <p class="lead">These controls are implemented in code and mapped to explicit failure behavior. Invalid records are not silently corrected; they are separated for investigation and replay governance.</p>
+        <div class="table-wrap" id="quality-table"></div>
       </section>
+
+      <section class="section" id="toolchain">
+        <h2>Engineering Toolchain</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Implemented Stack</h3>
+            <div id="implemented-stack"></div>
+          </div>
+          <div class="card">
+            <h3>Planned Enterprise Expansion</h3>
+            <div id="planned-stack"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="wiki">
+        <div class="wiki-layout">
+          <aside class="wiki-nav">
+            <h3>Knowledge Bank</h3>
+            <a href="#wiki-current">Current Implementation</a>
+            <a href="#wiki-flow">Current Data Flow</a>
+            <a href="#wiki-database">Database Model</a>
+            <a href="#wiki-expansion">Target Expansion</a>
+            <a href="#wiki-rules">Operating Rules</a>
+          </aside>
+          <div>
+            <h2>Project Knowledge Bank</h2>
+            <p class="lead">The documentation below is the same content prepared for the internal wiki page. It is displayed here so the public project surface contains the architecture narrative, not only the demo output.</p>
+            <div class="wiki-body" id="wiki-body">Loading documentation...</div>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        Built by Sri Surya S. Vaddhiparthy. Public technical surface for a local-first authentication audit platform.
+      </footer>
     </main>
+
     <script>
-      document.getElementById("load").addEventListener("click", async () => {
-        const response = await fetch("api/sample-transform");
-        document.getElementById("output").textContent = JSON.stringify(await response.json(), null, 2);
+      const api = (path) => fetch(path).then((r) => {
+        if (!r.ok) throw new Error(`${path} failed with ${r.status}`);
+        return r;
       });
-      async function hydrateStack() {
-        const stack = await (await fetch("api/stack")).json();
-        const gates = await (await fetch("api/quality-gates")).json();
-        const renderTools = (id, items) => {
-          document.getElementById(id).innerHTML = items.map(item => `<li><b>${item.tool}</b><span>${item.role}</span></li>`).join("");
-        };
-        renderTools("current-stack", stack.current);
-        renderTools("next-stack", stack.next_level);
-        document.getElementById("quality-gates").innerHTML = gates.gates.map(item => `<li><b>Gate</b><span>${item}</span></li>`).join("");
+      const json = (path) => api(path).then((r) => r.json());
+      const text = (path) => api(path).then((r) => r.text());
+      const escapeHtml = (value) => String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+
+      function renderRows(rows) {
+        if (!rows || rows.length === 0) return `<p class="lead" style="padding:16px;">No rows are present in the sample preview for this table.</p>`;
+        const columns = Object.keys(rows[0]);
+        return `<table><thead><tr>${columns.map((c) => `<th>${escapeHtml(c)}</th>`).join("")}</tr></thead><tbody>${rows.map((row) => `<tr>${columns.map((c) => `<td>${escapeHtml(typeof row[c] === "object" ? JSON.stringify(row[c]) : row[c])}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
       }
-      hydrateStack();
+
+      function renderToolList(items) {
+        return `<table><thead><tr><th>Tool</th><th>Role in the platform</th></tr></thead><tbody>${items.map((item) => `<tr><td><strong>${escapeHtml(item.tool)}</strong></td><td>${escapeHtml(item.role)}</td></tr>`).join("")}</tbody></table>`;
+      }
+
+      async function hydrate() {
+        const summary = await json("api/platform-summary");
+        document.getElementById("purpose").textContent = summary.purpose;
+        document.getElementById("summary-metrics").innerHTML = Object.entries(summary.implemented_counts)
+          .slice(0, 3)
+          .map(([key, value]) => `<div class="card"><div class="metric">${value}</div><div class="muted">${escapeHtml(key.replaceAll("_", " "))}</div></div>`)
+          .join("");
+        document.getElementById("control-cards").innerHTML = summary.implemented_controls
+          .map((control) => `<div class="card"><span class="badge"><span class="dot"></span> Implemented</span><h3 style="margin-top:12px;">${escapeHtml(control)}</h3></div>`)
+          .join("");
+
+        const flow = await json("api/flow");
+        document.getElementById("flow-cards").innerHTML = flow.stages.map((stage, index) => `
+          <div class="flow-card">
+            <span class="badge">Stage ${index + 1}</span>
+            <h3 style="margin-top:10px;">${escapeHtml(stage.stage)}</h3>
+            <p class="muted"><strong>${escapeHtml(stage.tooling)}</strong></p>
+            <p class="muted">${escapeHtml(stage.output)}</p>
+          </div>`).join("");
+
+        const tables = await json("api/table-preview");
+        const select = document.getElementById("table-select");
+        select.innerHTML = tables.tables.map((table, i) => `<option value="${i}">${escapeHtml(table.name)}</option>`).join("");
+        const renderTable = () => {
+          const selected = tables.tables[Number(select.value)];
+          document.getElementById("table-purpose").textContent = selected.purpose;
+          document.getElementById("table-preview").innerHTML = renderRows(selected.sample_rows);
+        };
+        select.addEventListener("change", renderTable);
+        renderTable();
+
+        const gates = await json("api/quality-gates");
+        document.getElementById("quality-table").innerHTML = `<table><thead><tr><th>Gate</th><th>Implemented in</th><th>Failure behavior</th></tr></thead><tbody>${gates.gates.map((gate) => `<tr><td><strong>${escapeHtml(gate.gate)}</strong></td><td>${escapeHtml(gate.implemented_in)}</td><td>${escapeHtml(gate.failure_behavior)}</td></tr>`).join("")}</tbody></table>`;
+
+        const stack = await json("api/stack");
+        document.getElementById("implemented-stack").innerHTML = renderToolList(stack.implemented);
+        document.getElementById("planned-stack").innerHTML = renderToolList(stack.planned);
+
+        document.getElementById("sql-schema").textContent = await text("api/sql-schema");
+        document.getElementById("source-contract").textContent = JSON.stringify(await json("api/source-contract"), null, 2);
+        document.getElementById("wiki-body").textContent = await text("api/wiki");
+      }
+
+      document.getElementById("load-source").addEventListener("click", async () => {
+        document.getElementById("source-output").textContent = JSON.stringify(await json("api/sample-events"), null, 2);
+      });
+      document.getElementById("load-transform").addEventListener("click", async () => {
+        document.getElementById("source-output").textContent = JSON.stringify(await json("api/sample-events"), null, 2);
+        document.getElementById("transform-output").textContent = JSON.stringify(await json("api/sample-transform"), null, 2);
+      });
+
+      hydrate().catch((error) => {
+        document.body.insertAdjacentHTML("afterbegin", `<pre style="margin:20px;">${escapeHtml(error.message)}</pre>`);
+      });
     </script>
   </body>
 </html>
