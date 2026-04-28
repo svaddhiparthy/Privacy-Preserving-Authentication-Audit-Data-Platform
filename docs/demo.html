@@ -304,11 +304,7 @@
         <div class="wiki-layout">
           <aside class="wiki-nav">
             <h3>Knowledge Bank</h3>
-            <a href="#wiki-current">Current Implementation</a>
-            <a href="#wiki-flow">Current Data Flow</a>
-            <a href="#wiki-database">Database Model</a>
-            <a href="#wiki-expansion">Target Expansion</a>
-            <a href="#wiki-rules">Operating Rules</a>
+            <div id="wiki-nav-links"></div>
           </aside>
           <div>
             <h2>Project Knowledge Bank</h2>
@@ -404,6 +400,25 @@
         return html;
       }
 
+      function slugify(value) {
+        return String(value ?? "")
+          .toLowerCase()
+          .replace(/&/g, " and ")
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "");
+      }
+
+      function articleAnchorId(title) {
+        const legacyIds = {
+          "Project Thesis": "wiki-current",
+          "Source Data Strategy": "wiki-flow",
+          "Database Model": "wiki-database",
+          "Planned Expansion": "wiki-expansion",
+          "Delivery Controls": "wiki-rules",
+        };
+        return legacyIds[title] || `wiki-${slugify(title)}`;
+      }
+
       async function hydrate() {
         const summary = await json("api/platform-summary");
         document.getElementById("purpose").textContent = summary.purpose;
@@ -475,8 +490,11 @@
         document.getElementById("sql-schema").textContent = await text("api/sql-schema");
         document.getElementById("source-contract").textContent = JSON.stringify(await json("api/source-contract"), null, 2);
         const wiki = await json("api/wiki-articles");
+        document.getElementById("wiki-nav-links").innerHTML = wiki.articles.map((article) => {
+          return `<a href="#${articleAnchorId(article.title)}">${escapeHtml(article.title)}</a>`;
+        }).join("");
         document.getElementById("wiki-body").innerHTML = wiki.articles.map((article) => `
-          <article class="wiki-article">
+          <article class="wiki-article" id="${articleAnchorId(article.title)}">
             <h3>${escapeHtml(article.title)}</h3>
             ${renderMarkdownBlock(article.body)}
           </article>
