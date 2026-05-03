@@ -1,8 +1,8 @@
-# PramanaLedger Knowledge Bank
+# Privacy-Preserving Authentication Audit Data Platform Knowledge Bank
 
 ## Project Thesis
 
-PramanaLedger is a privacy-preserving authentication audit data platform. The core business problem is simple: authentication telemetry is operationally valuable, but it contains sensitive identifiers that should not be copied directly into analytical tables. The platform demonstrates how a data engineer can accept raw login events, validate them, minimize sensitive fields, preserve rejected records for investigation, and maintain auditable evidence for every load.
+Privacy-Preserving Authentication Audit Data Platform is a privacy-preserving authentication audit data platform. The core business problem is simple: authentication telemetry is operationally valuable, but it contains sensitive identifiers that should not be copied directly into analytical tables. The platform demonstrates how a data engineer can accept raw login events, validate them, minimize sensitive fields, preserve rejected records for investigation, and maintain auditable evidence for every load.
 
 The project is intentionally positioned as a banking-style data engineering system. It is not a dashboard-first product. The main artifact is the data platform: source contract, queue ingestion, validation, privacy transform, curated storage, quarantine storage, audit evidence, and an operational surface that proves the pipeline behavior.
 
@@ -25,7 +25,7 @@ The project is intentionally positioned as a banking-style data engineering syst
 
 The live page can use two source modes. The default mode uses deterministic synthetic authentication telemetry stored in the repository. The external mode uses the Login Data Set for Risk-Based Authentication from DAS Group, available through Kaggle and Zenodo.
 
-The RBA dataset is a strong fit because it contains synthesized login attempts with IP address, country, region, city, ASN, user agent string, operating system, browser, device type, user ID, login timestamp, round-trip time, login success, attack-IP indicator, and account-takeover indicator. Those fields map naturally into the PramanaLedger contract and make the project more than a two-row demonstration.
+The RBA dataset is a strong fit because it contains synthesized login attempts with IP address, country, region, city, ASN, user agent string, operating system, browser, device type, user ID, login timestamp, round-trip time, login success, attack-IP indicator, and account-takeover indicator. Those fields map naturally into the Privacy-Preserving Authentication Audit Data Platform contract and make the project more than a two-row demonstration.
 
 The full dataset is large, so the repository carries an adapter instead of committing the data. When `data/external/rba/login_events.normalized.jsonl` is present, the API switches from the local fixture to the normalized RBA sample automatically.
 
@@ -33,7 +33,7 @@ The project can later add public reference data without changing the core design
 
 ## Why HMAC Tokenization
 
-Plain hashing is not enough for small input spaces. IPv4 addresses and common device identifiers can be brute-forced or dictionary-attacked if the hash is unsalted. PramanaLedger uses secret-keyed HMAC-SHA256 so the same input produces a stable token only when the secret is known.
+Plain hashing is not enough for small input spaces. IPv4 addresses and common device identifiers can be brute-forced or dictionary-attacked if the hash is unsalted. Privacy-Preserving Authentication Audit Data Platform uses secret-keyed HMAC-SHA256 so the same input produces a stable token only when the secret is known.
 
 This gives the platform two important properties. First, the token is deterministic, so repeated appearances of the same IP or device can still be joined analytically. Second, the raw value is not stored in the curated analytical table, so routine reporting does not expose direct identifiers.
 

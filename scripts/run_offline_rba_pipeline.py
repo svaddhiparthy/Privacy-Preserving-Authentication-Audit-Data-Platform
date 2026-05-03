@@ -119,7 +119,7 @@ def run(source: Path, artifacts_dir: Path, limit: int, preview_rows: int) -> dic
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run the PramanaLedger RBA pipeline entirely offline and capture artifacts.")
+    parser = argparse.ArgumentParser(description="Run the Privacy-Preserving Authentication Audit Data Platform RBA pipeline entirely offline and capture artifacts.")
     parser.add_argument("--source", default="data/external/rba/rba-dataset.zip")
     parser.add_argument("--artifacts-dir", default="data/artifacts/rba_offline")
     parser.add_argument("--limit", type=int, default=100000)

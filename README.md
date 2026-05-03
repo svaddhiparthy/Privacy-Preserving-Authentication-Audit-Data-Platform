@@ -2,7 +2,7 @@
 
 Privacy Preserving Authentication Audit Data Platform is a local-first data engineering project for secure authentication-event ingestion. The platform consumes login-event messages from an SQS-compatible queue, validates the event contract, tokenizes sensitive fields with secret-keyed HMAC-SHA256, writes idempotent analytical records into PostgreSQL, quarantines malformed records, and records batch-level audit evidence.
 
-The short internal product name is `PramanaLedger`.
+The short internal product name is `Privacy-Preserving Authentication Audit Data Platform`.
 
 The public route planned for the portfolio surface is:
 

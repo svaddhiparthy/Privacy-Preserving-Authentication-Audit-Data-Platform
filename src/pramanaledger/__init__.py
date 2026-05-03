@@ -1,4 +1,4 @@
-"""PramanaLedger secure authentication audit pipeline."""
+"""Privacy-Preserving Authentication Audit Data Platform secure authentication audit pipeline."""
 
 from pramanaledger.transform import (
     REQUIRED_FIELDS,
