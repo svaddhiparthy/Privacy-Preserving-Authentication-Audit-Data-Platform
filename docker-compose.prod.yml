@@ -10,8 +10,8 @@ services:
     expose:
       - "8075"
     networks:
-      - finlens_default
+      - astrax-compute-cloud_default
 
 networks:
-  finlens_default:
+  astrax-compute-cloud_default:
     external: true
