@@ -11,7 +11,7 @@ from pramanaledger.sources import write_normalized_sample
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Normalize the RBA Kaggle/Zenodo dataset into PramanaLedger login events.")
+    parser = argparse.ArgumentParser(description="Normalize the RBA Kaggle/Zenodo dataset into Privacy-Preserving Authentication Audit Data Platform login events.")
     parser.add_argument("--source", required=True, help="Path to rba-dataset zip or CSV.")
     parser.add_argument("--output", default="data/external/rba/login_events.normalized.jsonl")
     parser.add_argument("--limit", type=int, default=5000)

@@ -11,7 +11,7 @@ Privacy Preserving Authentication Audit Data Platform
 Internal name:
 
 ```text
-PramanaLedger
+Privacy-Preserving Authentication Audit Data Platform
 ```
 
 Public slug:

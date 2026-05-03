@@ -2,13 +2,13 @@
 
 ===== Purpose =====
 
-This page records critical directional decisions, implementation checkpoints, and operating notes for PramanaLedger.
+This page records critical directional decisions, implementation checkpoints, and operating notes for Privacy-Preserving Authentication Audit Data Platform.
 
 ===== 2026-04-27 — Direction Lock =====
 
   * Existing folder will be upgraded in place: Live\PII Ingestion.
   * Formal title: Privacy Preserving Authentication Audit Data Platform.
-  * Internal name: PramanaLedger.
+  * Internal name: Privacy-Preserving Authentication Audit Data Platform.
   * Public slug: privacy-preserving-authentication-audit-data-platform.
   * Build mode: local-first.
   * Telegram integration is excluded.

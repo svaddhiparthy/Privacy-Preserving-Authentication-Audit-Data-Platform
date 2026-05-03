@@ -2,7 +2,7 @@
 
 ===== Project Thesis =====
 
-PramanaLedger is a privacy-preserving authentication audit data platform. The platform accepts authentication telemetry, validates the source contract, tokenizes sensitive identifiers, stores curated analytical records, preserves rejected records in quarantine, and writes batch-level audit evidence.
+Privacy-Preserving Authentication Audit Data Platform is a privacy-preserving authentication audit data platform. The platform accepts authentication telemetry, validates the source contract, tokenizes sensitive identifiers, stores curated analytical records, preserves rejected records in quarantine, and writes batch-level audit evidence.
 
 The project is designed as a banking-style data engineering system. The primary artifact is the governed data flow, not a decorative landing page.
 
@@ -28,7 +28,7 @@ The generated feed includes user identifiers, device types, raw device identifie
 
 ===== Why HMAC Tokenization =====
 
-Plain hashes are weak for small input spaces. IPv4 addresses and common device identifiers can be dictionary-attacked. PramanaLedger uses secret-keyed HMAC-SHA256 so the token is stable for analytics but not useful without the secret.
+Plain hashes are weak for small input spaces. IPv4 addresses and common device identifiers can be dictionary-attacked. Privacy-Preserving Authentication Audit Data Platform uses secret-keyed HMAC-SHA256 so the token is stable for analytics but not useful without the secret.
 
 This keeps routine reporting away from raw IP and device identifiers while still allowing the same token to be joined across repeated login events.
 

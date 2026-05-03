@@ -16,7 +16,7 @@ if str(SRC_ROOT) not in sys.path:
 from pramanaledger.transform import transform_event, validate_event
 
 
-app = FastAPI(title="PramanaLedger Authentication Audit Platform")
+app = FastAPI(title="Privacy-Preserving Authentication Audit Data Platform Authentication Audit Platform")
 
 
 class DemoEvent(BaseModel):
@@ -133,7 +133,7 @@ def platform_summary() -> dict:
     metrics = _event_metrics()
     return {
         "project": "Privacy Preserving Authentication Audit Data Platform",
-        "internal_name": "PramanaLedger",
+        "internal_name": "Privacy-Preserving Authentication Audit Data Platform",
         "public_route": "https://surya.vaddhiparthy.com/privacy-preserving-authentication-audit-data-platform",
         "purpose": "A governed authentication-event ingestion platform that validates login telemetry, tokenizes sensitive identifiers, preserves audit evidence, and produces curated security analytics tables.",
         "implemented_counts": {
