@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: pramanaledger-demo
+    container_name: astrax-compute-cloud-professional-auth-audit
     restart: unless-stopped
     environment:
       HASH_SECRET: ${HASH_SECRET:-local-demo-secret}
