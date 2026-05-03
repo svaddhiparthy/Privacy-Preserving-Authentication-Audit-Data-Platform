@@ -1,5 +1,6 @@
 services:
   pramanaledger-demo:
+    image: astrax-compute-cloud-professional-auth-audit:latest
     build:
       context: .
       dockerfile: Dockerfile
