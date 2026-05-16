@@ -16,7 +16,7 @@ if str(SRC_ROOT) not in sys.path:
 from pramanaledger.transform import transform_event, validate_event
 
 
-app = FastAPI(title="Privacy-Preserving Authentication Audit Data Platform Authentication Audit Platform")
+app = FastAPI(title="Privacy-Preserving Authentication Audit Pipeline")
 
 
 class DemoEvent(BaseModel):

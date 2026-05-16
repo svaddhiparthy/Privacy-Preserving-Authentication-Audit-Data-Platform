@@ -1,134 +1,100 @@
-# Privacy Preserving Authentication Audit Data Platform
+# Privacy-Preserving Authentication Audit Pipeline
 
-Privacy Preserving Authentication Audit Data Platform is a local-first data engineering project for secure authentication-event ingestion. The platform consumes login-event messages from an SQS-compatible queue, validates the event contract, tokenizes sensitive fields with secret-keyed HMAC-SHA256, writes idempotent analytical records into PostgreSQL, quarantines malformed records, and records batch-level audit evidence.
+This repository implements a local-first authentication-event ingestion pipeline with privacy controls, replay-safe identity, quarantine handling, and batch audit evidence.
 
-The short internal product name is `Privacy-Preserving Authentication Audit Data Platform`.
+Public presentation: <https://surya.vaddhiparthy.com/privacy-preserving-authentication-audit-data-platform/>
 
-The public route planned for the portfolio surface is:
+## Implemented System
 
-```text
-https://surya.vaddhiparthy.com/privacy-preserving-authentication-audit-data-platform
-```
-
-## Current Implementation
-
-The current working implementation is intentionally compact and testable:
-
-| Capability | Status | Implementation |
-|---|---|---|
-| SQS-compatible ingestion | Working locally | LocalStack SQS plus `pramanaledger.sqs` |
-| Contract validation | Working | `pramanaledger.transform.validate_event` |
-| PII tokenization | Working | HMAC-SHA256 in `pramanaledger.tokenization` |
-| Deterministic event ID | Working | HMAC over canonical event hash |
-| PostgreSQL curated table | Working | `secure_login.user_logins` |
-| Quarantine table | Working | `secure_login.quarantine_login_events` |
-| Batch audit table | Working | `secure_login.ingestion_audit` |
-| Demo API | Working locally and deployed | `demo_api.py` |
-| Public technical surface | Working | Platform summary, flow, transform preview, data browser, schema, contract, controls, and knowledge bank |
-| Unit tests | Working | `tests/test_code_fetch_vaddhiparthy.py` |
+| Capability | Implementation |
+| --- | --- |
+| Queue intake | SQS-compatible ingestion with LocalStack support |
+| Event contract | Required field, device type, auth result, risk band, and app-version validation |
+| PII handling | Secret-keyed HMAC-SHA256 tokenization for IP and device identifiers |
+| Replay safety | Deterministic `event_id` derived from canonical event hash |
+| Curated storage | PostgreSQL `secure_login.user_logins` table |
+| Quarantine | Rejected payloads and validation reasons in `secure_login.quarantine_login_events` |
+| Audit evidence | Batch-level received, loaded, rejected, started, and completed counts |
+| Demo/API surface | FastAPI endpoints for health, flow, contract, transform preview, and table preview |
+| External dataset adapter | DAS Group RBA login dataset adapter for local offline runs |
 
 ## Architecture
 
 ```text
-Login Events JSON
-        |
-        v
-LocalStack SQS
-        |
-        v
-Ingestion Worker
-        |
-        +--> validate event contract
-        +--> reject malformed events to quarantine
-        +--> tokenize IP and device identifiers
-        +--> generate deterministic event_id
-        |
-        v
-PostgreSQL secure_login schema
-        |
-        +--> user_logins
-        +--> quarantine_login_events
-        +--> ingestion_audit
+Login event JSON
+  -> SQS-compatible queue
+  -> batch ingestion worker
+  -> contract validation
+  -> HMAC tokenization
+  -> PostgreSQL secure_login schema
+  -> FastAPI technical surface
 ```
 
-The platform uses deterministic idempotency rather than source-provided identifiers. The `event_id` is derived from a canonical source-event hash and a secret HMAC key. Replaying the same event produces the same key, and PostgreSQL enforces `ON CONFLICT DO NOTHING` at the storage boundary.
+The pipeline stores raw sensitive identifiers only at the source boundary. Curated rows contain deterministic tokens, normalized event fields, source hashes, and audit metadata.
 
-## Package Layout
+## Repository Layout
 
-```text
-src/pramanaledger/
-  config.py        # environment-backed runtime settings
-  tokenization.py  # hash and HMAC helpers
-  transform.py     # validation and event transformation
-  sqs.py           # SQS receive/delete helpers
-  postgres.py      # schema creation and persistence functions
-  runner.py        # batch orchestration
-
-code_fetch_vaddhiparthy.py  # compatibility entrypoint
-demo_api.py                 # local FastAPI demo service
-sql/                        # database schema
-docs/                       # architecture and wiki-ready documentation
-tests/                      # unit tests
-```
+| Path | Purpose |
+| --- | --- |
+| `src/pramanaledger/` | Runtime settings, SQS intake, validation, tokenization, PostgreSQL writes, batch runner |
+| `contracts/v1/` | Versioned login-event JSON Schema |
+| `sql/` | PostgreSQL schema for curated, quarantine, audit, and health objects |
+| `sample_data/` | Small deterministic synthetic login-event fixture |
+| `scripts/` | Sample generation, offline RBA preparation, offline execution, smoke test |
+| `docs/artifacts/rba_offline/` | Compact evidence from a local RBA run |
+| `docs/wiki/` | Technical notes and knowledge-bank content used by the demo surface |
+| `tests/` | Unit tests for validation, tokenization, source preparation, and fetch entrypoints |
+| `demo_api.py` | FastAPI presentation and inspection surface |
 
 ## Data Contract
 
-Each login event must include:
+Required fields:
 
-| Field | Description |
-|---|---|
-| `user_id` | Logical user identifier |
-| `device_type` | One of `ios`, `android`, or `web` |
-| `device_id` | Raw device identifier, tokenized before persistence |
-| `ip` | Raw IP address, tokenized before persistence |
-| `locale` | Locale string such as `en_US` |
-| `app_version` | Semantic application version; major version is extracted |
-| `event_time_utc` | Optional event timestamp used for preview and future warehouse partitioning |
-| `auth_result` | Optional authentication outcome, `success` or `failure` |
-| `risk_band` | Optional operational risk band, `low`, `medium`, or `high` |
+| Field | Rule |
+| --- | --- |
+| `user_id` | Required, non-blank |
+| `device_type` | `ios`, `android`, or `web` |
+| `device_id` | Required, tokenized before curated persistence |
+| `ip` | Required, tokenized before curated persistence |
+| `locale` | Required string |
+| `app_version` | Required semantic version; major version is extracted |
 
-Malformed events are rejected into quarantine with the original payload and error message. They are not silently coerced into placeholder values.
+Optional fields:
 
-The current JSON Schema contract is stored at:
+| Field | Rule |
+| --- | --- |
+| `event_time_utc` | Used when present, otherwise ingestion time is used |
+| `auth_result` | `success` or `failure`; defaults to `success` |
+| `risk_band` | `low`, `medium`, or `high`; defaults to `low` |
 
-```text
-contracts/v1/login_event.schema.json
-```
+Invalid events are quarantined with the original payload and error message. They are not silently coerced into placeholder records.
 
 ## Database Model
 
-Target schema:
+Target schema: `secure_login`
 
-```text
-secure_login
-```
+| Object | Purpose |
+| --- | --- |
+| `secure_login.user_logins` | Curated authentication-event facts with tokenized sensitive fields |
+| `secure_login.quarantine_login_events` | Invalid payloads and validation failures |
+| `secure_login.ingestion_audit` | Batch-level ingestion evidence |
+| `secure_login.vw_ingestion_health` | Latest run, loaded totals, rejected totals, and batch count |
 
-Tables:
-
-| Table | Purpose |
-|---|---|
-| `secure_login.user_logins` | Curated login-event records with tokenized sensitive fields |
-| `secure_login.quarantine_login_events` | Rejected payloads and validation reasons |
-| `secure_login.ingestion_audit` | Batch start/end timestamps, received count, loaded count, rejected count |
-
-View:
-
-| View | Purpose |
-|---|---|
-| `secure_login.vw_ingestion_health` | Latest completed load, total loaded records, total rejected records, batch count |
-
-## Local Development
-
-Start local infrastructure:
-
-```powershell
-docker compose up -d
-```
+## Local Setup
 
 Install dependencies:
 
 ```powershell
-pip install -r requirements.txt
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -U pip
+python -m pip install -r requirements.txt
+```
+
+Start local services:
+
+```powershell
+docker compose up -d
 ```
 
 Create the LocalStack queue:
@@ -137,17 +103,10 @@ Create the LocalStack queue:
 aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name login-queue
 ```
 
-Send a sample event:
-
-```powershell
-aws --endpoint-url=http://localhost:4566 sqs send-message `
-  --queue-url http://localhost:4566/000000000000/login-queue `
-  --message-body '{\"user_id\":\"user_123\",\"device_type\":\"android\",\"device_id\":\"A1B2C3D4\",\"ip\":\"192.168.1.10\",\"locale\":\"en_US\",\"app_version\":\"5.2.3\"}'
-```
-
 Run the ingestion worker:
 
 ```powershell
+$env:PYTHONPATH = "src"
 python code_fetch_vaddhiparthy.py
 ```
 
@@ -157,110 +116,53 @@ Run the demo API:
 uvicorn demo_api:app --reload --port 8075
 ```
 
-Open:
+Local URLs:
 
-```text
-http://127.0.0.1:8075
-```
+- Demo API: `http://127.0.0.1:8075`
+- Health: `http://127.0.0.1:8075/health`
+- Uptime-style health: `http://127.0.0.1:8075/healthz`
 
 ## Configuration
 
-Configuration is environment-driven. Use `.env.example` as the template and keep real values in ignored `.env` files.
+Use `.env.example` as the template. Keep real values in ignored `.env` files or secret managers.
 
 | Variable | Purpose |
-|---|---|
+| --- | --- |
 | `SQS_ENDPOINT_URL` | LocalStack or AWS SQS endpoint |
 | `SQS_QUEUE_URL` | Login-event queue URL |
 | `MAX_MESSAGES` | Batch receive size |
 | `WAIT_TIME_SECONDS` | SQS long-poll wait time |
 | `VISIBILITY_TIMEOUT` | SQS visibility timeout |
-| `DB_HOST` | PostgreSQL host |
-| `DB_PORT` | PostgreSQL port |
-| `DB_NAME` | PostgreSQL database |
-| `DB_USER` | PostgreSQL user |
-| `DB_PASSWORD` | PostgreSQL password |
+| `DB_HOST` / `DB_PORT` / `DB_NAME` | PostgreSQL connection target |
+| `DB_USER` / `DB_PASSWORD` | PostgreSQL credentials |
 | `DB_SCHEMA` | Target schema, default `secure_login` |
 | `HASH_SECRET` | Secret used for deterministic HMAC tokenization |
-| `QUARANTINE_INVALID_EVENTS` | Whether rejected messages are deleted from the queue after quarantine |
-
-No real secret values belong in committed code, markdown, SQL, logs, or Docker build context.
+| `QUARANTINE_INVALID_EVENTS` | Whether rejected messages are deleted after quarantine |
 
 ## Validation
 
-Run unit tests:
-
 ```powershell
 python -m unittest discover -s tests -p "test_*.py"
-```
-
-Compile the Python modules:
-
-```powershell
 Get-ChildItem src\pramanaledger\*.py | ForEach-Object { python -m py_compile $_.FullName }
 python -m py_compile code_fetch_vaddhiparthy.py demo_api.py
-```
-
-Run the smoke script:
-
-```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\smoke_test.ps1
 ```
 
-## Planned Expansion
+The smoke script runs unit tests and compiles the runtime modules. It does not require real cloud credentials.
 
-The next implementation target is to expand this into a full technical portfolio system using the same operating style as the completed FinLens platform:
+## RBA Dataset Path
 
-1. PII vault with controlled re-identification and access audit.
-2. Versioned source contracts under `contracts/`.
-3. Bronze, Silver, and Gold data layers.
-4. dbt models and privacy-focused tests.
-5. Airflow orchestration.
-6. Technical control room with pipeline status, quality status, table browser, and transformation previews.
-7. Wiki-style knowledge bank.
-8. Public portfolio route at the planned slug.
+The repository includes an adapter for the DAS Group Login Data Set for Risk-Based Authentication.
 
-The system will remain local-first. Real cloud services are optional and should only be enabled after the local path is working and tested.
+Dataset references:
 
-## Public Surface Contents
+- Kaggle: `dasgroup/rba-dataset`
+- Zenodo DOI: `10.5281/zenodo.6782156`
 
-The deployed page is a technical surface, not only a landing page. It currently exposes:
-
-| Section | Backing asset |
-|---|---|
-| Platform overview | `demo_api.platform_summary` |
-| Data flow | `demo_api.flow` |
-| Live transform preview | `sample_data/login_events.jsonl` plus `pramanaledger.transform` |
-| Data table browser | `demo_api.table_preview` |
-| PostgreSQL schema viewer | `sql/001_secure_login_schema.sql` |
-| Source contract viewer | `contracts/v1/login_event.schema.json` |
-| Quality and privacy gates | `demo_api.quality_gates` |
-| Knowledge bank | `docs/wiki/pramanaledger_knowledge_bank.md` |
-
-The sample dataset is deterministic synthetic authentication telemetry. It is intentionally generated rather than scraped from public user activity because authentication logs are sensitive by nature and public samples are often licensed, stale, or stripped of useful operational fields.
-
-## RBA Dataset Integration
-
-The project now includes an adapter for the Login Data Set for Risk-Based Authentication, published by the DAS Group and available on Kaggle as:
-
-```text
-dasgroup/rba-dataset
-```
-
-The same dataset is also published on Zenodo with DOI:
-
-```text
-10.5281/zenodo.6782156
-```
-
-The RBA dataset is large, so it is not committed into this repository. To activate it locally:
+The full dataset is not committed. To activate it locally:
 
 ```powershell
 mkdir data\external\rba
-```
-
-Place the downloaded zip or CSV in that folder, then run:
-
-```powershell
 $env:PYTHONPATH = "src"
 python scripts\prepare_rba_dataset.py `
   --source data\external\rba\rba-dataset.zip `
@@ -268,30 +170,7 @@ python scripts\prepare_rba_dataset.py `
   --limit 5000
 ```
 
-When `data/external/rba/login_events.normalized.jsonl` exists, the demo API automatically uses it instead of the small repository fixture.
-
-The adapter maps RBA columns into the platform contract:
-
-| RBA field | Platform field |
-|---|---|
-| `User ID` | `user_id` |
-| `Device Type` plus browser and OS | `device_type`, `device_id` |
-| `IP Address` | `ip` |
-| `Country` | `locale` |
-| `Login Timestamp` | `event_time_utc` |
-| `Login Successful` | `auth_result` |
-| `Is Attack IP`, `Is Account Takeover` | `risk_band` |
-
-The RBA adapter lives in:
-
-```text
-src/pramanaledger/sources.py
-scripts/prepare_rba_dataset.py
-```
-
-## Offline RBA Run Artifacts
-
-The project also includes a local-only execution path that processes the downloaded RBA zip without AWS, S3, hosted queues, or remote warehouses:
+Offline run:
 
 ```powershell
 $env:PYTHONPATH = "src"
@@ -302,10 +181,11 @@ python scripts\run_offline_rba_pipeline.py `
   --preview-rows 1000
 ```
 
-The latest offline run processed a 100,000-record slice and captured compact portfolio artifacts under:
+Committed compact artifacts under `docs/artifacts/rba_offline/` show the output shape without committing the full source dataset.
 
-```text
-docs/artifacts/rba_offline/
-```
+## Security Notes
 
-The full downloaded source zip remains local under `data/external/rba/` and is ignored by Git. The committed artifacts include summary metrics, table inventory, audit evidence, and limited preview samples from the bronze and silver stages.
+- Do not commit `.env` files, raw credentials, live authentication logs, or downloaded RBA source files.
+- Curated rows must use `masked_ip` and `masked_device_id`, not raw IP or device identifiers.
+- Replay behavior depends on deterministic event identity; changes to canonical hashing or HMAC secrets affect deduplication.
+- Quarantine exists to preserve evidence for malformed records without letting them enter the curated table.
