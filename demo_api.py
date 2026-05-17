@@ -5,7 +5,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse, PlainTextResponse
+from fastapi.responses import HTMLResponse, PlainTextResponse, Response
 from pydantic import BaseModel
 
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -115,6 +115,11 @@ def _audit_rows() -> list[dict]:
 @app.get("/", response_class=HTMLResponse)
 def demo_page() -> str:
     return _read_text("docs/demo.html")
+
+
+@app.head("/")
+def demo_page_head() -> Response:
+    return Response(media_type="text/html")
 
 
 @app.get("/health")
