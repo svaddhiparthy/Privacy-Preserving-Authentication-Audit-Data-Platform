@@ -1,0 +1,35 @@
+====== Privacy Preserving Authentication Audit Data Platform — Working Notes ======
+
+===== Purpose =====
+
+This page records critical directional decisions, implementation checkpoints, and operating notes for Privacy-Preserving Authentication Audit Data Platform.
+
+===== 2026-04-27 — Direction Lock =====
+
+  * Existing folder will be upgraded in place: Live\PII Ingestion.
+  * Formal title: Privacy Preserving Authentication Audit Data Platform.
+  * Internal name: Privacy-Preserving Authentication Audit Data Platform.
+  * Public slug: privacy-preserving-authentication-audit-data-platform.
+  * Build mode: local-first.
+  * Telegram integration is excluded.
+  * Existing S3 bucket family can be reused later under a project-specific prefix.
+  * FinLens layout and documentation style will be reused as a pattern, not copied as content.
+
+===== 2026-04-27 — Refactor Checkpoint =====
+
+  * The original flat ingestion script was modularized into src/pramanaledger.
+  * code_fetch_vaddhiparthy.py remains as a compatibility entrypoint.
+  * Unit tests continue to pass after modularization.
+
+===== Future Notes Protocol =====
+
+Add entries here when any of these change:
+
+  * public route
+  * source set
+  * schema design
+  * PII vault boundary
+  * Airflow/dbt deployment approach
+  * compliance interpretation
+  * hosting or domain strategy
+  * security posture

@@ -1,0 +1,38 @@
+{
+  "dataset_name": "Login Data Set for Risk-Based Authentication",
+  "dataset_doi": "10.5281/zenodo.6782156",
+  "dataset_license": "CC BY 4.0",
+  "records_processed": 100000,
+  "unique_users": 41500,
+  "auth_result_counts": {
+    "failure": 51273,
+    "success": 48727
+  },
+  "risk_band_counts": {
+    "medium": 44828,
+    "low": 45472,
+    "high": 9700
+  },
+  "device_type_counts": {
+    "android": 73455,
+    "web": 26545
+  },
+  "top_countries": {
+    "NO": 47406,
+    "US": 22522,
+    "PL": 5841,
+    "BR": 4973,
+    "IN": 2380,
+    "DE": 2285,
+    "UA": 1994,
+    "GB": 1762,
+    "ID": 1471,
+    "AU": 1359,
+    "FR": 962,
+    "CZ": 760
+  },
+  "rtt_observed_count": 0,
+  "rtt_missing_count": 100000,
+  "average_rtt_ms": null,
+  "artifact_generated_at_utc": "2026-04-27T22:52:26.012030+00:00"
+}

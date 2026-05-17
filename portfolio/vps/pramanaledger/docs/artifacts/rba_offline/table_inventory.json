@@ -1,0 +1,20 @@
+[
+  {
+    "table": "bronze_rba_login_events",
+    "records": 100000,
+    "artifact": "bronze_rba_login_events_sample.jsonl",
+    "purpose": "Normalized source contract records derived from the RBA dataset."
+  },
+  {
+    "table": "silver_user_logins",
+    "records": 100000,
+    "artifact": "silver_user_logins_sample.jsonl",
+    "purpose": "Curated authentication records after validation and HMAC tokenization."
+  },
+  {
+    "table": "audit_ingestion_runs",
+    "records": 1,
+    "artifact": "audit_ingestion_runs.csv",
+    "purpose": "Offline run audit evidence with record counts and execution timing."
+  }
+]

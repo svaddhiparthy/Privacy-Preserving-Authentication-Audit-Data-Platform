@@ -1,0 +1,19 @@
+name: professional
+services:
+  pramanaledger:
+    image: professional-pramanaledger:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: professional-pramanaledger
+    restart: unless-stopped
+    expose:
+      - "8075"
+    networks:
+      - platform_edge
+      - professional_net
+networks:
+  platform_edge:
+    external: true
+  professional_net:
+    external: true

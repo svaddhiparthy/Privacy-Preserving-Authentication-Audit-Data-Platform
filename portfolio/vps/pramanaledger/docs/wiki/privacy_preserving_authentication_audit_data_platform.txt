@@ -1,0 +1,77 @@
+====== Privacy Preserving Authentication Audit Data Platform ======
+
+===== Project Thesis =====
+
+Privacy-Preserving Authentication Audit Data Platform is a privacy-preserving authentication audit data platform. The platform accepts authentication telemetry, validates the source contract, tokenizes sensitive identifiers, stores curated analytical records, preserves rejected records in quarantine, and writes batch-level audit evidence.
+
+The project is designed as a banking-style data engineering system. The primary artifact is the governed data flow, not a decorative landing page.
+
+===== Implemented Scope =====
+
+^ Capability ^ Current state ^ Evidence ^
+| Source contract | Implemented | contracts/v1/login_event.schema.json |
+| Queue-backed ingestion | Implemented locally | src/pramanaledger/sqs.py |
+| Validation layer | Implemented | src/pramanaledger/transform.py |
+| PII tokenization | Implemented | src/pramanaledger/tokenization.py |
+| Curated persistence | Implemented | src/pramanaledger/postgres.py |
+| Quarantine persistence | Implemented | secure_login.quarantine_login_events |
+| Batch audit evidence | Implemented | secure_login.ingestion_audit |
+| Health endpoint | Implemented | /healthz |
+| Public technical surface | Implemented | FastAPI, Docker, Caddy |
+| Synthetic telemetry set | Implemented | sample_data/login_events.jsonl |
+
+===== Source Data Strategy =====
+
+The live page uses deterministic synthetic authentication telemetry. This is deliberate. Real login-event datasets are usually sensitive, licensed, stale, or stripped of the exact operational fields needed to demonstrate privacy engineering.
+
+The generated feed includes user identifiers, device types, raw device identifiers, IP-like addresses, locales, application versions, event timestamps, authentication outcomes, and risk bands. The raw fields are sufficient to demonstrate validation, tokenization, replay-safe identity, curated table loading, and operational metrics.
+
+===== Why HMAC Tokenization =====
+
+Plain hashes are weak for small input spaces. IPv4 addresses and common device identifiers can be dictionary-attacked. Privacy-Preserving Authentication Audit Data Platform uses secret-keyed HMAC-SHA256 so the token is stable for analytics but not useful without the secret.
+
+This keeps routine reporting away from raw IP and device identifiers while still allowing the same token to be joined across repeated login events.
+
+===== Event Identity and Replay Safety =====
+
+The event identity is derived from a canonical source-event hash and a secret HMAC key. If the same event is replayed, it produces the same event_id. PostgreSQL enforces idempotency with ON CONFLICT DO NOTHING, so replay safety exists at the storage boundary.
+
+===== Validation and Quarantine =====
+
+The validation layer enforces required fields, device type domain checks, authentication outcome checks, risk-band checks, and parseable application versions. Invalid records are rejected rather than silently coerced.
+
+===== Database Model =====
+
+^ Object ^ Purpose ^
+| secure_login.user_logins | Curated authentication fact table with tokenized identifiers |
+| secure_login.quarantine_login_events | Rejected payload table with validation reason |
+| secure_login.ingestion_audit | Batch control table with received, loaded, and rejected counts |
+| secure_login.vw_ingestion_health | Operational rollup for latest load and cumulative counts |
+
+===== Quality Controls =====
+
+^ Control ^ Purpose ^
+| Required field validation | Prevents partial login records from entering curated storage |
+| Device type domain check | Keeps downstream dimensions controlled |
+| Version parsing | Converts semantic version strings into analyzable major versions |
+| HMAC tokenization | Removes raw IP and device identifiers from curated storage |
+| Deterministic event ID | Makes replay safe |
+| Quarantine table | Preserves bad records and failure reasons |
+| Ingestion audit table | Provides operational evidence for each batch |
+
+===== Planned Expansion =====
+
+^ Module ^ Purpose ^ Status ^
+| PII vault | Controlled re-identification and access audit | Planned |
+| Bronze/Silver/Gold layers | Analytical data platform structure | Planned |
+| dbt | Transformation tests, documentation, and lineage | Planned |
+| Airflow | Scheduling, retries, backfills, and DAG evidence | Planned |
+| S3 retention | Immutable landing and retained audit exports | Planned |
+| Streamlit control room | Rich operational surface | Planned |
+| Monitoring | Freshness, reject rate, throughput, endpoint health | Planned |
+
+===== Data Source Expansion Options =====
+
+The safest near-term enhancement is deterministic synthetic telemetry plus stable public reference dimensions. Recommended candidates are ISO country and locale references, public autonomous-system reference tables, device taxonomy mappings, NIST privacy and security control references, and carefully reviewed public cyber-range logs.
+
+The project should not scrape random public pages for login events. Authentication logs are privacy-sensitive by design, and a brittle public feed would weaken the credibility of the platform.

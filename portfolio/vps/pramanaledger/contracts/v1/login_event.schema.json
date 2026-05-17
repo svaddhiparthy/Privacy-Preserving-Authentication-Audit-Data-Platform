@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://surya.vaddhiparthy.com/privacy-preserving-authentication-audit-data-platform/contracts/v1/login_event.schema.json",
+  "title": "LoginEvent",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "user_id",
+    "device_type",
+    "device_id",
+    "ip",
+    "locale",
+    "app_version"
+  ],
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "device_type": {
+      "type": "string",
+      "enum": ["ios", "android", "web"]
+    },
+    "device_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ip": {
+      "type": "string",
+      "minLength": 1
+    },
+    "locale": {
+      "type": "string",
+      "minLength": 2
+    },
+    "app_version": {
+      "type": "string",
+      "pattern": "^[0-9]+(\\.[0-9]+){0,2}$"
+    },
+    "event_time_utc": {
+      "type": "string",
+      "minLength": 1
+    },
+    "auth_result": {
+      "type": "string",
+      "enum": ["success", "failure"]
+    },
+    "risk_band": {
+      "type": "string",
+      "enum": ["low", "medium", "high"]
+    }
+  }
+}
