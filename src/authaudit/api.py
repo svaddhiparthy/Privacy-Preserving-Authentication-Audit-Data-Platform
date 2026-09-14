@@ -6,6 +6,8 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, PlainTextResponse, Response
 from pydantic import BaseModel
 
+from authaudit.lineage import COLUMN_LINEAGE, DIRECT_IDENTIFIERS, lineage_summary
+from authaudit.operations import FAILURE_MODES, run_history, scale_and_cost, scheduling
 from authaudit.transform import transform_event, validate_event
 
 # src/authaudit/api.py -> repository root
@@ -129,7 +131,7 @@ def healthz() -> dict:
     return {"status": "ok", "service": "authaudit-demo"}
 
 
-TEST_COUNT = 66
+TEST_COUNT = 83
 
 
 def headline_metrics() -> list[dict]:
@@ -432,6 +434,29 @@ def stack() -> dict:
                 ),
             },
         ],
+    }
+
+
+@app.get("/api/lineage")
+def lineage() -> dict:
+    """Column-level lineage for secure_login.user_logins."""
+    return {
+        "target_table": "secure_login.user_logins",
+        "direct_identifiers_in_source": list(DIRECT_IDENTIFIERS),
+        "summary": lineage_summary(),
+        "columns": COLUMN_LINEAGE,
+    }
+
+
+@app.get("/api/operations")
+def operations() -> dict:
+    """Scheduling, run history with freshness, failure handling, and measured scale."""
+    artifacts = offline_artifacts()
+    return {
+        "scheduling": scheduling(),
+        "run_history": run_history(artifacts),
+        "failure_modes": FAILURE_MODES,
+        "scale_and_cost": scale_and_cost(artifacts),
     }
 
 
