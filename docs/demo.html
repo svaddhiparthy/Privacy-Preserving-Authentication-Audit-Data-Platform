@@ -215,6 +215,10 @@
         .arch-frame {height:260px;}
         .arch-hint {display:none;}
       }
+      /* Grid and flex children default to min-width:auto, which lets a wide table push the
+         track wider than the viewport. Without this the tables are clipped, not contained. */
+      .grid-2 > *, .grid-3 > *, .wiki-layout > * {min-width:0;}
+      .card {min-width:0;}
       /* Wide previews scroll inside their own container, never the page. */
       .table-wrap {max-width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch;}
       .table-wrap table {min-width:max-content;}
@@ -224,6 +228,17 @@
         .hero-links {gap:6px;}
         .lnk {font-size:.76rem; padding:7px 10px;}
       }
+      .run-strip {display:flex; flex-wrap:wrap; gap:10px; margin:0 0 16px;}
+      .run-stat {flex:1 1 150px; background:var(--panel-strong); border:1px solid var(--border);
+        border-radius:12px; padding:12px 14px;}
+      .run-stat .v {font-weight:700; font-size:1.15rem;}
+      .run-stat .k {font-size:.72rem; color:var(--muted); margin-top:2px;}
+      .stale {color:var(--warm); font-weight:600;}
+      .fresh {color:var(--green); font-weight:600;}
+      .pill {display:inline-block; padding:2px 8px; border-radius:999px; font-size:.68rem;
+        font-weight:700; border:1px solid var(--border); background:var(--panel-strong);}
+      .pill-tok {border-color:var(--accent); color:var(--accent);}
+      .pill-id {border-color:var(--warm); color:var(--warm);}
     </style>
   </head>
   <body>
@@ -258,6 +273,8 @@
           <a href="#transform">Transform Preview</a>
           <a href="#tables">Data Tables</a>
           <a href="#schema">Schema</a>
+          <a href="#operations">Operations</a>
+          <a href="#lineage">Lineage</a>
           <a href="#quality">Quality Gates</a>
           <a href="#toolchain">Toolchain</a>
           <a href="#verify">Verify</a>
@@ -449,6 +466,35 @@
         <div class="table-wrap" id="quality-table"></div>
       </section>
 
+      <section class="section" id="operations">
+        <h2>Operations</h2>
+        <p class="lead">How work is triggered, what the last audited run did, how each failure
+          class is handled, and what the measured numbers imply about scale and cost.
+          The full-volume run is a point-in-time benchmark against the 1.1 GB source archive,
+          which is not committed; correctness is verified continuously by the suite instead.</p>
+        <div class="run-strip" id="run-strip"></div>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Scheduling</h3>
+            <div class="table-wrap" id="scheduling-table"></div>
+          </div>
+          <div class="card">
+            <h3>Scale and cost</h3>
+            <div class="table-wrap" id="scale-table"></div>
+          </div>
+        </div>
+        <h3 style="margin-top:22px;">Failure handling</h3>
+        <p class="lead">Each row is a failure the platform handles today, with the code path
+          that handles it and how far the damage spreads.</p>
+        <div class="table-wrap" id="failure-table"></div>
+      </section>
+
+      <section class="section" id="lineage">
+        <h2>Column Lineage</h2>
+        <p class="lead" id="lineage-lead"></p>
+        <div class="table-wrap" id="lineage-table"></div>
+      </section>
+
       <section class="section" id="toolchain">
         <h2>Engineering Toolchain</h2>
         <p class="lead">Every tool listed is in the running system. The roadmap lives in the
@@ -562,6 +608,53 @@ curl -s https://surya.vaddhiparthy.com/privacy-preserving-authentication-audit-d
 
         const gates = await json("api/quality-gates");
         document.getElementById("quality-table").innerHTML = `<table><thead><tr><th>Gate</th><th>Implemented in</th><th>Failure behavior</th></tr></thead><tbody>${gates.gates.map((gate) => `<tr><td><strong>${escapeHtml(gate.gate)}</strong></td><td>${escapeHtml(gate.implemented_in)}</td><td>${escapeHtml(gate.failure_behavior)}</td></tr>`).join("")}</tbody></table>`;
+
+        const ops = await json("api/operations");
+        const run = ops.run_history.latest;
+        if (run) {
+          const age = run.age_days;
+          const freshness = age === null || age === undefined
+            ? "unknown"
+            : `${age} days ago`;
+          const freshClass = (age !== null && age !== undefined && age > 30) ? "stale" : "fresh";
+          document.getElementById("run-strip").innerHTML = [
+            [`${Number(run.records_loaded).toLocaleString()}`, "records loaded"],
+            [`${Number(run.records_per_second).toLocaleString()}/s`, "measured throughput"],
+            [`${run.records_rejected}`, `rejected (${run.reject_rate_pct}% reject rate)`],
+            [`${run.execution_seconds}s`, "wall clock"],
+            [`<span class="${freshClass}">${escapeHtml(freshness)}</span>`,
+             `last full-volume benchmark &middot; suite runs daily`],
+          ].map(([v, k]) => `<div class="run-stat"><div class="v">${v}</div><div class="k">${k}</div></div>`).join("");
+        }
+        document.getElementById("scheduling-table").innerHTML =
+          `<table><thead><tr><th>Job</th><th>Cadence</th><th>Evidence</th></tr></thead><tbody>${
+            ops.scheduling.map((j) => `<tr><td><strong>${escapeHtml(j.job)}</strong><br><span class="muted">${escapeHtml(j.trigger)}</span></td><td>${escapeHtml(j.cadence)}</td><td class="muted">${escapeHtml(j.evidence)}</td></tr>`).join("")
+          }</tbody></table>`;
+        document.getElementById("scale-table").innerHTML =
+          `<table><thead><tr><th>Dimension</th><th>Value</th><th>Basis</th></tr></thead><tbody>${
+            ops.scale_and_cost.map((x) => `<tr><td><strong>${escapeHtml(x.dimension)}</strong></td><td>${escapeHtml(x.value)}</td><td class="muted">${escapeHtml(x.basis)}</td></tr>`).join("")
+          }</tbody></table>`;
+        document.getElementById("failure-table").innerHTML =
+          `<table><thead><tr><th>Failure</th><th>Detected by</th><th>Behaviour</th><th>Blast radius</th><th>Code</th></tr></thead><tbody>${
+            ops.failure_modes.map((f) => `<tr><td><strong>${escapeHtml(f.failure)}</strong></td><td class="muted">${escapeHtml(f.detection)}</td><td>${escapeHtml(f.behaviour)}</td><td class="muted">${escapeHtml(f.blast_radius)}</td><td class="muted">${escapeHtml(f.implemented_in)}</td></tr>`).join("")
+          }</tbody></table>`;
+
+        const lin = await json("api/lineage");
+        const ls = lin.summary;
+        document.getElementById("lineage-lead").textContent =
+          `${ls.columns} columns in ${lin.target_table}. ` +
+          `${ls.direct_identifiers_in_source} direct identifiers exist in the source ` +
+          `(${lin.direct_identifiers_in_source.join(", ")}); neither is stored in raw form. ` +
+          `${ls.tokenized} columns are keyed tokens. The only column carrying an identifier is ` +
+          `${ls.columns_carrying_an_identifier.join(", ")}, which is pseudonymous at source and ` +
+          `kept because it is the analytic grain.`;
+        const kindPill = (k) => k === "tokenized"
+          ? `<span class="pill pill-tok">tokenized</span>`
+          : `<span class="pill">${escapeHtml(k)}</span>`;
+        document.getElementById("lineage-table").innerHTML =
+          `<table><thead><tr><th>Curated column</th><th>Kind</th><th>Derived from</th><th>Rule</th><th>Note</th></tr></thead><tbody>${
+            lin.columns.map((c) => `<tr><td><strong>${escapeHtml(c.column)}</strong>${c.carries_identifier ? ' <span class="pill pill-id">identifier</span>' : ""}</td><td>${kindPill(c.kind)}</td><td class="muted">${escapeHtml((c.sources || []).join(", ") || "not applicable")}</td><td>${escapeHtml(c.rule)}</td><td class="muted">${escapeHtml(c.note || "")}</td></tr>`).join("")
+          }</tbody></table>`;
 
         const stack = await json("api/stack");
         document.getElementById("implemented-stack").innerHTML = renderToolList(stack.implemented);

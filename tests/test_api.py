@@ -131,3 +131,35 @@ class HeadlineMetricsTests(unittest.TestCase):
     def test_test_count_matches_the_suite(self) -> None:
         counts = client.get("/api/platform-summary").json()["implemented_counts"]
         self.assertEqual(counts["unit_tests"], TEST_COUNT)
+
+
+class OperationsEndpointTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.ops = client.get("/api/operations").json()
+
+    def test_publishes_scheduling_failures_and_scale(self) -> None:
+        self.assertTrue(self.ops["scheduling"])
+        self.assertTrue(self.ops["failure_modes"])
+        self.assertTrue(self.ops["scale_and_cost"])
+
+    def test_run_history_reports_the_audited_run(self) -> None:
+        latest = self.ops["run_history"]["latest"]
+        self.assertEqual(latest["records_loaded"], 100000)
+        self.assertEqual(latest["records_rejected"], 0)
+        self.assertGreater(latest["records_per_second"], 0)
+
+
+class LineageEndpointTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.lineage = client.get("/api/lineage").json()
+
+    def test_targets_the_curated_table(self) -> None:
+        self.assertEqual(self.lineage["target_table"], "secure_login.user_logins")
+
+    def test_no_direct_identifier_is_stored_raw(self) -> None:
+        for column in self.lineage["columns"]:
+            if column["kind"] != "carried":
+                continue
+            with self.subTest(column=column["column"]):
+                for identifier in self.lineage["direct_identifiers_in_source"]:
+                    self.assertNotIn(identifier, column["sources"])
