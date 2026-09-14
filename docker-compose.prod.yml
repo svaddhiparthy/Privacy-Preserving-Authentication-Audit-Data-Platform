@@ -1,12 +1,16 @@
 name: professional
 services:
-  pramanaledger:
-    image: professional-pramanaledger:latest
+  authaudit:
+    image: professional-authaudit:latest
     build:
       context: .
       dockerfile: Dockerfile
     pull_policy: never
-    container_name: professional-pramanaledger
+    container_name: professional-authaudit
+    # HASH_SECRET keys the HMAC tokenization. Without it the service falls back to the
+    # public development secret and every published token becomes reproducible.
+    env_file:
+      - .env
     healthcheck:
       test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8075/health', timeout=5)"]
       interval: 60s

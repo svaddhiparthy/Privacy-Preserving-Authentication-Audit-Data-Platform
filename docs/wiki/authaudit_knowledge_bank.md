@@ -11,10 +11,10 @@ The project is intentionally positioned as a banking-style data engineering syst
 | Capability | Current state | Evidence |
 |---|---|---|
 | Source contract | Implemented | `contracts/v1/login_event.schema.json` |
-| Queue-backed ingestion | Implemented locally | `src/pramanaledger/sqs.py` |
-| Validation layer | Implemented | `src/pramanaledger/transform.py` |
-| PII tokenization | Implemented | `src/pramanaledger/tokenization.py` |
-| Curated persistence | Implemented | `src/pramanaledger/postgres.py` |
+| Queue-backed ingestion | Implemented locally | `src/authaudit/sqs.py` |
+| Validation layer | Implemented | `src/authaudit/transform.py` |
+| PII tokenization | Implemented | `src/authaudit/tokenization.py` |
+| Curated persistence | Implemented | `src/authaudit/postgres.py` |
 | Quarantine persistence | Implemented | `secure_login.quarantine_login_events` |
 | Batch audit evidence | Implemented | `secure_login.ingestion_audit` |
 | Health endpoint | Implemented | `/healthz` |

@@ -1,8 +1,9 @@
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
-from pramanaledger.tokenization import hash_value, hmac_value
+from authaudit.config import resolve_hash_secret
+from authaudit.tokenization import hash_value, hmac_value
 
 REQUIRED_FIELDS = {
     "user_id",
@@ -42,11 +43,17 @@ def transform_event(
     event: dict[str, Any],
     ingested_at: datetime | None = None,
     *,
-    hash_secret: str = "local-demo-secret",
+    hash_secret: str | None = None,
     batch_id: str | None = None,
 ) -> dict[str, Any]:
+    """Validate an event and return its curated, tokenized row.
+
+    ``hash_secret`` defaults to the HASH_SECRET environment variable, resolved per call so a
+    deployment cannot be pinned to the development fallback by an import-time default.
+    """
     validate_event(event)
-    timestamp = ingested_at or datetime.now(timezone.utc)
+    hash_secret = hash_secret if hash_secret is not None else resolve_hash_secret()
+    timestamp = ingested_at or datetime.now(UTC)
     source_hash = canonical_event_hash(event)
     return {
         "event_id": hmac_value(source_hash, hash_secret),
