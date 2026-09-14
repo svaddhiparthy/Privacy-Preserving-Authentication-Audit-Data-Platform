@@ -14,7 +14,7 @@ https://surya.vaddhiparthy.com/privacy-preserving-authentication-audit-data-plat
 
 ```bash
 pip install -e ".[dev]"   # install the package and dev tooling
-pytest                    # 62 tests across transform, tokenization, persistence, queue, and API
+pytest                    # 66 tests across transform, tokenization, persistence, queue, and API
 ruff check .              # lint
 curl -fsS https://surya.vaddhiparthy.com/privacy-preserving-authentication-audit-data-platform/healthz
 ```
@@ -34,7 +34,7 @@ The current working implementation is intentionally compact and testable:
 | Batch audit table | Working | `secure_login.ingestion_audit` |
 | Demo API | Working locally and deployed | `authaudit.api` |
 | Public technical surface | Working | Platform summary, flow, transform preview, data browser, schema, contract, controls, and knowledge bank |
-| Unit tests | Working | 62 tests in `tests/`, run by GitHub Actions on every push |
+| Unit tests | Working | 66 tests in `tests/`, run by GitHub Actions on every push |
 
 ## Architecture
 

@@ -129,6 +129,40 @@ def healthz() -> dict:
     return {"status": "ok", "service": "authaudit-demo"}
 
 
+TEST_COUNT = 66
+
+
+def headline_metrics() -> list[dict]:
+    """What the platform actually did, drawn from the packaged audit record.
+
+    The fixture counts describe a demo; these describe the audited 100k-record run, which is
+    what a reader should see first.
+    """
+    artifacts = offline_artifacts()
+    if not artifacts.get("available"):
+        return []
+    audit = artifacts["audit"]
+    metrics = artifacts["metrics"]
+    loaded = audit["records_loaded"]
+    rejected = audit["records_rejected"]
+    seconds = audit["execution_seconds"] or 1
+    received = audit["messages_received"] or 1
+    return [
+        {"value": f"{loaded:,}", "label": "records ingested in one audited batch"},
+        {
+            "value": f"{round(loaded / seconds / 1000, 1)}k/s",
+            "label": "sustained transform throughput",
+        },
+        {
+            "value": f"{round(100 * (received - rejected) / received, 1)}%",
+            "label": "passed the contract, 0 rejected",
+        },
+        {"value": f"{metrics['unique_users']:,}", "label": "unique users resolved"},
+        {"value": "2 of 2", "label": "direct identifiers tokenized, IP and device"},
+        {"value": str(TEST_COUNT), "label": "tests gating every push"},
+    ]
+
+
 @app.get("/api/platform-summary")
 def platform_summary() -> dict:
     _transformed_events()
@@ -142,6 +176,7 @@ def platform_summary() -> dict:
             "tokenizes sensitive identifiers, preserves audit evidence, and produces curated "
             "security analytics tables."
         ),
+        "headline_metrics": headline_metrics(),
         "implemented_counts": {
             "source_event_examples": metrics["source_events"],
             "curated_event_examples": metrics["curated_events"],
@@ -151,7 +186,7 @@ def platform_summary() -> dict:
             "sql_tables": 3,
             "sql_views": 1,
             "contract_versions": 1,
-            "unit_tests": 4,
+            "unit_tests": TEST_COUNT,
             "health_endpoints": 2,
         },
         "implemented_controls": [

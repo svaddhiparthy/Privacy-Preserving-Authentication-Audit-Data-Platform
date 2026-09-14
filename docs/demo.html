@@ -215,6 +215,15 @@
         .arch-frame {height:260px;}
         .arch-hint {display:none;}
       }
+      /* Wide previews scroll inside their own container, never the page. */
+      .table-wrap {max-width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch;}
+      .table-wrap table {min-width:max-content;}
+      main, body {overflow-x:hidden;}
+      pre {max-width:100%; overflow-x:auto;}
+      @media (max-width:760px) {
+        .hero-links {gap:6px;}
+        .lnk {font-size:.76rem; padding:7px 10px;}
+      }
     </style>
   </head>
   <body>
@@ -229,7 +238,9 @@
             Every number and preview on this page is produced by the running service.</p>
           <div class="hero-links">
             <a class="lnk" href="https://github.com/vaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform" target="_blank" rel="noreferrer">&#9679;&nbsp; Source code</a>
-            <a class="lnk" href="https://github.com/vaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform/actions" target="_blank" rel="noreferrer">CI: lint + 62 tests</a>
+            <a class="lnk" href="https://github.com/vaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform/actions" target="_blank" rel="noreferrer"><img
+              src="https://github.com/vaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform/actions/workflows/ci.yml/badge.svg?branch=main"
+              alt="CI status" style="height:18px;display:block;"></a>
             <a class="lnk" href="#verify">How to verify</a>
           </div>
         </div>
@@ -498,9 +509,12 @@ curl -s https://surya.vaddhiparthy.com/privacy-preserving-authentication-audit-d
 
       async function hydrate() {
         const summary = await json("api/platform-summary");
-        document.getElementById("summary-metrics").innerHTML = Object.entries(summary.implemented_counts)
-          .slice(0, 6)
-          .map(([key, value]) => `<div class="card"><div class="metric">${value}</div><div class="muted">${escapeHtml(key.replaceAll("_", " "))}</div></div>`)
+        const headline = (summary.headline_metrics && summary.headline_metrics.length)
+          ? summary.headline_metrics
+          : Object.entries(summary.implemented_counts).slice(0, 6)
+              .map(([key, value]) => ({ value, label: key.replaceAll("_", " ") }));
+        document.getElementById("summary-metrics").innerHTML = headline
+          .map((m) => `<div class="card"><div class="metric">${escapeHtml(String(m.value))}</div><div class="muted">${escapeHtml(m.label)}</div></div>`)
           .join("");
         const sources = await json("api/source-registry");
         const artifacts = await json("api/offline-artifacts");
