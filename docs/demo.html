@@ -182,6 +182,63 @@
         .hero, .grid-3, .grid-2, .wiki-layout { grid-template-columns:1fr; }
         .wiki-nav { position:static; border-right:0; border-bottom:1px solid var(--border); padding-bottom:12px; }
       }
+      /* architecture window */
+      .arch {margin:0 0 4px;}
+      .arch-frame {position:relative; border:1px solid var(--border); border-radius:16px;
+        background:var(--panel); overflow:hidden; height:330px; touch-action:none;
+        box-shadow:0 8px 24px rgba(15,23,42,.05);}
+      .arch-bar {position:absolute; inset:0 0 auto 0; z-index:3; display:flex; align-items:center;
+        gap:10px; padding:10px 14px; pointer-events:none;}
+      .arch-bar .eyebrow {margin:0;}
+      .arch-title {font-weight:700; font-size:.95rem;}
+      .arch-hint {font-size:.7rem; color:var(--muted); margin-left:auto; pointer-events:none;}
+      .arch-frame svg {display:block; width:100%; height:100%; cursor:grab;}
+      .arch-frame svg:active {cursor:grabbing;}
+      .arch-zoom {position:absolute; right:10px; bottom:10px; z-index:3; display:flex; gap:6px;}
+      .arch-zoom button {width:28px; height:28px; padding:0; font-size:.85rem; line-height:1;
+        border:1px solid var(--border); background:var(--panel-strong); color:var(--ink);
+        border-radius:8px; cursor:pointer;}
+      .arch-zoom button:hover {background:var(--accent-soft);}
+      .n-lbl {font:600 10px ui-sans-serif,system-ui,sans-serif; fill:var(--ink);}
+      .n-sub {font:9px ui-sans-serif,system-ui,sans-serif; fill:var(--muted);}
+      .c-lbl {font:600 9px ui-sans-serif,system-ui,sans-serif; fill:var(--muted);
+        letter-spacing:.08em;}
+      .lnk {display:inline-flex; align-items:center; gap:7px; padding:8px 13px; border-radius:10px;
+        border:1px solid var(--border); background:var(--panel-strong); color:var(--ink);
+        text-decoration:none; font-size:.82rem; font-weight:600;}
+      .lnk:hover {background:var(--accent-soft); border-color:var(--accent);}
+      .hero-links {display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;}
+      .verify {background:var(--code); color:var(--code-ink); border-radius:12px; padding:14px 16px;
+        font:12px ui-monospace,SFMono-Regular,Menlo,monospace; overflow-x:auto; margin:0;}
+      .verify .cmt {color:#8aa0b4;}
+      @media (max-width:760px) {
+        .arch-frame {height:260px;}
+        .arch-hint {display:none;}
+      }
+      /* Grid and flex children default to min-width:auto, which lets a wide table push the
+         track wider than the viewport. Without this the tables are clipped, not contained. */
+      .grid-2 > *, .grid-3 > *, .wiki-layout > * {min-width:0;}
+      .card {min-width:0;}
+      /* Wide previews scroll inside their own container, never the page. */
+      .table-wrap {max-width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch;}
+      .table-wrap table {min-width:max-content;}
+      main, body {overflow-x:hidden;}
+      pre {max-width:100%; overflow-x:auto;}
+      @media (max-width:760px) {
+        .hero-links {gap:6px;}
+        .lnk {font-size:.76rem; padding:7px 10px;}
+      }
+      .run-strip {display:flex; flex-wrap:wrap; gap:10px; margin:0 0 16px;}
+      .run-stat {flex:1 1 150px; background:var(--panel-strong); border:1px solid var(--border);
+        border-radius:12px; padding:12px 14px;}
+      .run-stat .v {font-weight:700; font-size:1.15rem;}
+      .run-stat .k {font-size:.72rem; color:var(--muted); margin-top:2px;}
+      .stale {color:var(--warm); font-weight:600;}
+      .fresh {color:var(--green); font-weight:600;}
+      .pill {display:inline-block; padding:2px 8px; border-radius:999px; font-size:.68rem;
+        font-weight:700; border:1px solid var(--border); background:var(--panel-strong);}
+      .pill-tok {border-color:var(--accent); color:var(--accent);}
+      .pill-id {border-color:var(--warm); color:var(--warm);}
     </style>
   </head>
   <body>
@@ -190,7 +247,17 @@
         <div>
           <p class="eyebrow">Privacy-Preserving Authentication Audit Data Platform</p>
           <h1>Privacy Preserving Authentication Audit Data Platform</h1>
-          <p class="lead">A governed event-ingestion project for authentication telemetry. The platform demonstrates queue intake, contract validation, PII tokenization, curated persistence, quarantine handling, and batch audit evidence through a working technical surface.</p>
+          <p class="lead" id="purpose">A governed authentication-event ingestion platform: queue
+            intake, contract validation, HMAC tokenization of direct identifiers, curated
+            persistence, a quarantine path for rejected records, and batch-level audit evidence.
+            Every number and preview on this page is produced by the running service.</p>
+          <div class="hero-links">
+            <a class="lnk" href="https://github.com/vaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform" target="_blank" rel="noreferrer">&#9679;&nbsp; Source code</a>
+            <a class="lnk" href="https://github.com/vaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform/actions" target="_blank" rel="noreferrer"><img
+              src="https://github.com/vaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform/actions/workflows/ci.yml/badge.svg?branch=chore%2Fp0-credibility"
+              alt="CI status" style="height:18px;display:block;"></a>
+            <a class="lnk" href="#verify">How to verify</a>
+          </div>
         </div>
         <div class="hero-card">
           <span class="badge"><span class="dot"></span> Live container deployed</span>
@@ -201,22 +268,141 @@
 
       <nav class="nav">
         <div class="nav-inner">
-          <a href="#overview">Overview</a>
+          <a href="#architecture">Architecture</a>
           <a href="#sources">Sources</a>
-          <a href="#flow">Data Flow</a>
           <a href="#transform">Transform Preview</a>
           <a href="#tables">Data Tables</a>
           <a href="#schema">Schema</a>
+          <a href="#operations">Operations</a>
+          <a href="#lineage">Lineage</a>
           <a href="#quality">Quality Gates</a>
           <a href="#toolchain">Toolchain</a>
-          <a href="#wiki">Knowledge Bank</a>
+          <a href="#verify">Verify</a>
         </div>
       </nav>
 
-      <section class="section" id="overview">
-        <h2>Platform Overview</h2>
-        <p class="lead" id="purpose"></p>
-        <div class="grid-3" id="control-cards"></div>
+      <section class="section arch" id="architecture">
+        <div class="arch-frame" id="arch-frame">
+          <div class="arch-bar">
+            <p class="eyebrow">Architecture</p>
+            <span class="arch-title">Source contract to audited warehouse</span>
+            <span class="arch-hint">scroll to zoom &middot; drag to pan</span>
+          </div>
+          <svg id="arch-svg" viewBox="0 0 1180 330" xmlns="http://www.w3.org/2000/svg"
+               role="img" aria-label="Architecture of the authentication audit platform">
+            <defs>
+              <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6"
+                      markerHeight="6" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="#96a3b2"/>
+              </marker>
+              <marker id="ahr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6"
+                      markerHeight="6" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="#b8613e"/>
+              </marker>
+            </defs>
+            <g id="arch-g">
+              <rect x="14" y="58" width="196" height="150" rx="12" fill="#f0e7da" stroke="#dfd0bd"/>
+              <text class="c-lbl" x="26" y="78">SOURCES</text>
+              <rect x="232" y="58" width="196" height="150" rx="12" fill="#f0e7da" stroke="#dfd0bd"/>
+              <text class="c-lbl" x="244" y="78">INGESTION</text>
+              <rect x="450" y="58" width="238" height="240" rx="12" fill="#eef1ec" stroke="#dfd0bd"/>
+              <text class="c-lbl" x="462" y="78">VALIDATE AND TOKENIZE</text>
+              <rect x="710" y="58" width="234" height="240" rx="12" fill="#e7eeee" stroke="#dfd0bd"/>
+              <text class="c-lbl" x="722" y="78">CURATED POSTGRES</text>
+              <rect x="966" y="58" width="200" height="150" rx="12" fill="#f0e7da" stroke="#dfd0bd"/>
+              <text class="c-lbl" x="978" y="78">SERVING</text>
+
+              <g id="n-src">
+                <rect x="30" y="90" width="164" height="42" rx="9" fill="#fffaf3" stroke="#c9b9a4"/>
+                <text class="n-lbl" x="42" y="108">RBA login data set</text>
+                <text class="n-sub" x="42" y="122">Kaggle / Zenodo, CC BY 4.0</text>
+              </g>
+              <g id="n-fix">
+                <rect x="30" y="146" width="164" height="42" rx="9" fill="#fffaf3" stroke="#c9b9a4"/>
+                <text class="n-lbl" x="42" y="164">Synthetic fixture</text>
+                <text class="n-sub" x="42" y="178">deterministic fallback</text>
+              </g>
+              <g id="n-sqs">
+                <rect x="248" y="90" width="164" height="42" rx="9" fill="#fffaf3" stroke="#c9b9a4"/>
+                <text class="n-lbl" x="260" y="108">SQS queue intake</text>
+                <text class="n-sub" x="260" y="122">LocalStack, batched receive</text>
+              </g>
+              <g id="n-ctr">
+                <rect x="248" y="146" width="164" height="42" rx="9" fill="#fffaf3" stroke="#c9b9a4"/>
+                <text class="n-lbl" x="260" y="164">LoginEvent contract</text>
+                <text class="n-sub" x="260" y="178">JSON Schema 2020-12</text>
+              </g>
+              <g id="n-val">
+                <rect x="468" y="90" width="202" height="42" rx="9" fill="#fffaf3" stroke="#c9b9a4"/>
+                <text class="n-lbl" x="480" y="108">Validation</text>
+                <text class="n-sub" x="480" y="122">required fields, domain, version</text>
+              </g>
+              <g id="n-hmac">
+                <rect x="468" y="148" width="202" height="46" rx="9" fill="#fffaf3" stroke="#0d5f68"/>
+                <text class="n-lbl" x="480" y="166">HMAC-SHA256 tokenization</text>
+                <text class="n-sub" x="480" y="180">secret-keyed, deterministic</text>
+              </g>
+              <g id="n-qua">
+                <rect x="468" y="212" width="202" height="42" rx="9" fill="#fbf0ea" stroke="#b8613e"/>
+                <text class="n-lbl" x="480" y="230">Quarantine</text>
+                <text class="n-sub" x="480" y="244">rejected payload plus reason</text>
+              </g>
+              <g id="n-fact">
+                <rect x="726" y="90" width="202" height="46" rx="9" fill="#fffaf3" stroke="#c9b9a4"/>
+                <text class="n-lbl" x="738" y="108">user_logins</text>
+                <text class="n-sub" x="738" y="122">curated fact, event_id primary key</text>
+              </g>
+              <g id="n-qt">
+                <rect x="726" y="150" width="202" height="42" rx="9" fill="#fffaf3" stroke="#c9b9a4"/>
+                <text class="n-lbl" x="738" y="168">quarantine_login_events</text>
+                <text class="n-sub" x="738" y="182">investigable rejects</text>
+              </g>
+              <g id="n-aud">
+                <rect x="726" y="206" width="202" height="42" rx="9" fill="#fffaf3" stroke="#c9b9a4"/>
+                <text class="n-lbl" x="738" y="224">ingestion_audit</text>
+                <text class="n-sub" x="738" y="238">received / loaded / rejected</text>
+              </g>
+              <g id="n-view">
+                <rect x="726" y="258" width="202" height="30" rx="9" fill="#eef5f4" stroke="#0d5f68"/>
+                <text class="n-lbl" x="738" y="277">vw_ingestion_health</text>
+              </g>
+              <g id="n-api">
+                <rect x="982" y="90" width="168" height="42" rx="9" fill="#fffaf3" stroke="#c9b9a4"/>
+                <text class="n-lbl" x="994" y="108">FastAPI surface</text>
+                <text class="n-sub" x="994" y="122">previews, schema, /healthz</text>
+              </g>
+              <g id="n-edge">
+                <rect x="982" y="146" width="168" height="42" rx="9" fill="#fffaf3" stroke="#c9b9a4"/>
+                <text class="n-lbl" x="994" y="164">Docker and Caddy</text>
+                <text class="n-sub" x="994" y="178">TLS edge, this page</text>
+              </g>
+
+              <path d="M194 111 H248" stroke="#96a3b2" fill="none" marker-end="url(#ah)"/>
+              <path d="M194 167 H248" stroke="#96a3b2" fill="none" marker-end="url(#ah)"/>
+              <path d="M412 111 H468" stroke="#96a3b2" fill="none" marker-end="url(#ah)"/>
+              <path d="M412 167 Q440 167 440 140 Q440 111 468 111" stroke="#96a3b2" fill="none"
+                    marker-end="url(#ah)"/>
+              <path d="M569 132 V148" stroke="#96a3b2" fill="none" marker-end="url(#ah)"/>
+              <path d="M500 132 V212" stroke="#b8613e" fill="none" stroke-dasharray="4 3"
+                    marker-end="url(#ahr)"/>
+              <text class="n-sub" x="506" y="205" fill="#b8613e">invalid</text>
+              <path d="M670 171 H726 M670 171 Q700 171 700 113 Q700 113 726 113" stroke="#96a3b2"
+                    fill="none" marker-end="url(#ah)"/>
+              <path d="M670 233 Q700 233 700 200 Q700 171 726 171" stroke="#b8613e" fill="none"
+                    stroke-dasharray="4 3" marker-end="url(#ahr)"/>
+              <path d="M928 113 H982" stroke="#96a3b2" fill="none" marker-end="url(#ah)"/>
+              <path d="M928 227 Q956 227 956 170 Q956 113 982 113" stroke="#96a3b2" fill="none"
+                    marker-end="url(#ah)"/>
+              <path d="M1066 132 V146" stroke="#96a3b2" fill="none" marker-end="url(#ah)"/>
+              <text class="n-sub" x="736" y="308">ON CONFLICT DO NOTHING makes replay safe</text>
+            </g>
+          </svg>
+          <div class="arch-zoom">
+            <button type="button" id="arch-in" aria-label="Zoom in">+</button>
+            <button type="button" id="arch-out" aria-label="Zoom out">&minus;</button>
+            <button type="button" id="arch-reset" aria-label="Reset view">&#8634;</button>
+          </div>
+        </div>
       </section>
 
       <section class="section" id="sources">
@@ -225,12 +411,6 @@
         <div class="card" id="active-source"></div>
         <div class="grid-3" id="offline-artifact-metrics" style="margin:16px 0;"></div>
         <div class="table-wrap" id="source-registry"></div>
-      </section>
-
-      <section class="section" id="flow">
-        <h2>End-to-End Data Flow</h2>
-        <p class="lead">The flow is intentionally small but complete: source contract, queue intake, validation, privacy transform, database persistence, and public operational surface.</p>
-        <div class="flow" id="flow-cards"></div>
       </section>
 
       <section class="section" id="transform">
@@ -286,31 +466,61 @@
         <div class="table-wrap" id="quality-table"></div>
       </section>
 
-      <section class="section" id="toolchain">
-        <h2>Engineering Toolchain</h2>
+      <section class="section" id="operations">
+        <h2>Operations</h2>
+        <p class="lead">How work is triggered, what the last audited run did, how each failure
+          class is handled, and what the measured numbers imply about scale and cost.
+          The full-volume run is a point-in-time benchmark against the 1.1 GB source archive,
+          which is not committed; correctness is verified continuously by the suite instead.</p>
+        <div class="run-strip" id="run-strip"></div>
         <div class="grid-2">
           <div class="card">
-            <h3>Implemented Stack</h3>
-            <div id="implemented-stack"></div>
+            <h3>Scheduling</h3>
+            <div class="table-wrap" id="scheduling-table"></div>
           </div>
           <div class="card">
-            <h3>Planned Enterprise Expansion</h3>
-            <div id="planned-stack"></div>
+            <h3>Scale and cost</h3>
+            <div class="table-wrap" id="scale-table"></div>
           </div>
+        </div>
+        <h3 style="margin-top:22px;">Failure handling</h3>
+        <p class="lead">Each row is a failure the platform handles today, with the code path
+          that handles it and how far the damage spreads.</p>
+        <div class="table-wrap" id="failure-table"></div>
+      </section>
+
+      <section class="section" id="lineage">
+        <h2>Column Lineage</h2>
+        <p class="lead" id="lineage-lead"></p>
+        <div class="table-wrap" id="lineage-table"></div>
+      </section>
+
+      <section class="section" id="toolchain">
+        <h2>Engineering Toolchain</h2>
+        <p class="lead">Every tool listed is in the running system. The roadmap lives in the
+          repository README, not on this page.</p>
+        <div class="card">
+          <div id="implemented-stack"></div>
         </div>
       </section>
 
-      <section class="section" id="wiki">
-        <div class="wiki-layout">
-          <aside class="wiki-nav">
-            <h3>Knowledge Bank</h3>
-            <div id="wiki-nav-links"></div>
-          </aside>
-          <div>
-            <h2>Project Knowledge Bank</h2>
-            <p class="lead">The documentation below is the same content prepared for the internal wiki page. It is displayed here so the public project surface contains the architecture narrative, not only the demo output.</p>
-            <div id="wiki-body">Loading documentation...</div>
-          </div>
+      <section class="section" id="verify">
+        <h2>Verify It Yourself</h2>
+        <p class="lead">Nothing here is a screenshot. Clone the repository and reproduce it, or
+          call the running service directly.</p>
+        <pre class="verify"><span class="cmt"># run the suite that gates every push</span>
+git clone https://github.com/vaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform.git
+cd Privacy-Preserving-Authentication-Audit-Data-Platform
+pip install -e ".[dev]" &amp;&amp; pytest &amp;&amp; ruff check .
+
+<span class="cmt"># or call this deployment</span>
+curl -s https://surya.vaddhiparthy.com/privacy-preserving-authentication-audit-data-platform/healthz</pre>
+        <div class="hero-links" style="margin-top:14px;">
+          <a class="lnk" href="https://github.com/vaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform" target="_blank" rel="noreferrer">Repository</a>
+          <a class="lnk" href="https://github.com/vaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform/blob/main/docs/wiki/authaudit_knowledge_bank.md"
+             target="_blank" rel="noreferrer">Design notes and rationale</a>
+          <a class="lnk" href="https://github.com/vaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform/blob/main/docs/architecture.md" target="_blank"
+             rel="noreferrer">Architecture write-up</a>
         </div>
       </section>
 
@@ -343,102 +553,15 @@
         return `<table><thead><tr><th>Tool</th><th>Role in the platform</th></tr></thead><tbody>${items.map((item) => `<tr><td><strong>${escapeHtml(item.tool)}</strong></td><td>${escapeHtml(item.role)}</td></tr>`).join("")}</tbody></table>`;
       }
 
-      function renderMarkdownBlock(markdown) {
-        const lines = markdown.split("\n");
-        let html = "";
-        let inList = false;
-        let inTable = false;
-        let tableRows = [];
-        const flushList = () => {
-          if (inList) {
-            html += "</ul>";
-            inList = false;
-          }
-        };
-        const flushTable = () => {
-          if (inTable) {
-            const bodyRows = tableRows.filter((row) => !row.every((cell) => /^-+$/.test(cell.replaceAll(" ", ""))));
-            if (bodyRows.length) {
-              const head = bodyRows[0];
-              const body = bodyRows.slice(1);
-              html += `<div class="table-wrap"><table><thead><tr>${head.map((cell) => `<th>${escapeHtml(cell)}</th>`).join("")}</tr></thead><tbody>${body.map((row) => `<tr>${row.map((cell) => `<td>${formatInline(cell)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
-            }
-            tableRows = [];
-            inTable = false;
-          }
-        };
-        const formatInline = (text) => escapeHtml(text)
-          .replaceAll("`", "")
-          .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-        for (const rawLine of lines) {
-          const line = rawLine.trim();
-          if (!line) {
-            flushList();
-            flushTable();
-            continue;
-          }
-          if (line.startsWith("|") && line.endsWith("|")) {
-            flushList();
-            inTable = true;
-            tableRows.push(line.slice(1, -1).split("|").map((cell) => cell.trim()));
-            continue;
-          }
-          flushTable();
-          if (line.startsWith("- ") || /^\d+\.\s/.test(line)) {
-            if (!inList) {
-              html += "<ul>";
-              inList = true;
-            }
-            html += `<li>${formatInline(line.replace(/^- /, "").replace(/^\d+\.\s/, ""))}</li>`;
-          } else {
-            flushList();
-            html += `<p>${formatInline(line)}</p>`;
-          }
-        }
-        flushList();
-        flushTable();
-        return html;
-      }
-
-      function slugify(value) {
-        return String(value ?? "")
-          .toLowerCase()
-          .replace(/&/g, " and ")
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-+|-+$/g, "");
-      }
-
-      function articleAnchorId(title) {
-        const legacyIds = {
-          "Project Thesis": "wiki-current",
-          "Source Data Strategy": "wiki-flow",
-          "Database Model": "wiki-database",
-          "Planned Expansion": "wiki-expansion",
-          "Delivery Controls": "wiki-rules",
-        };
-        return legacyIds[title] || `wiki-${slugify(title)}`;
-      }
-
       async function hydrate() {
         const summary = await json("api/platform-summary");
-        document.getElementById("purpose").textContent = summary.purpose;
-        document.getElementById("summary-metrics").innerHTML = Object.entries(summary.implemented_counts)
-          .slice(0, 6)
-          .map(([key, value]) => `<div class="card"><div class="metric">${value}</div><div class="muted">${escapeHtml(key.replaceAll("_", " "))}</div></div>`)
+        const headline = (summary.headline_metrics && summary.headline_metrics.length)
+          ? summary.headline_metrics
+          : Object.entries(summary.implemented_counts).slice(0, 6)
+              .map(([key, value]) => ({ value, label: key.replaceAll("_", " ") }));
+        document.getElementById("summary-metrics").innerHTML = headline
+          .map((m) => `<div class="card"><div class="metric">${escapeHtml(String(m.value))}</div><div class="muted">${escapeHtml(m.label)}</div></div>`)
           .join("");
-        document.getElementById("control-cards").innerHTML = summary.implemented_controls
-          .map((control) => `<div class="card"><span class="badge"><span class="dot"></span> Implemented</span><h3 style="margin-top:12px;">${escapeHtml(control)}</h3></div>`)
-          .join("");
-
-        const flow = await json("api/flow");
-        document.getElementById("flow-cards").innerHTML = flow.stages.map((stage, index) => `
-          <div class="flow-card">
-            <span class="badge">Stage ${index + 1}</span>
-            <h3 style="margin-top:10px;">${escapeHtml(stage.stage)}</h3>
-            <p class="muted"><strong>${escapeHtml(stage.tooling)}</strong></p>
-            <p class="muted">${escapeHtml(stage.output)}</p>
-          </div>`).join("");
-
         const sources = await json("api/source-registry");
         const artifacts = await json("api/offline-artifacts");
         document.getElementById("active-source").innerHTML = `
@@ -462,6 +585,9 @@
         const select = document.getElementById("table-select");
         const groups = Object.keys(tables.groups);
         groupSelect.innerHTML = groups.map((group) => `<option value="${escapeHtml(group)}">${escapeHtml(group)}</option>`).join("");
+        // Open on audit evidence: the batch control table is the engineering proof, not the input.
+        const auditGroup = groups.find((g) => /audit/i.test(g));
+        if (auditGroup) { groupSelect.value = auditGroup; }
         const populateTables = () => {
           const group = groupSelect.value;
           select.innerHTML = tables.groups[group].map((table, i) => `<option value="${i}">${escapeHtml(table.name)}</option>`).join("");
@@ -483,22 +609,58 @@
         const gates = await json("api/quality-gates");
         document.getElementById("quality-table").innerHTML = `<table><thead><tr><th>Gate</th><th>Implemented in</th><th>Failure behavior</th></tr></thead><tbody>${gates.gates.map((gate) => `<tr><td><strong>${escapeHtml(gate.gate)}</strong></td><td>${escapeHtml(gate.implemented_in)}</td><td>${escapeHtml(gate.failure_behavior)}</td></tr>`).join("")}</tbody></table>`;
 
+        const ops = await json("api/operations");
+        const run = ops.run_history.latest;
+        if (run) {
+          const age = run.age_days;
+          const freshness = age === null || age === undefined
+            ? "unknown"
+            : `${age} days ago`;
+          const freshClass = (age !== null && age !== undefined && age > 30) ? "stale" : "fresh";
+          document.getElementById("run-strip").innerHTML = [
+            [`${Number(run.records_loaded).toLocaleString()}`, "records loaded"],
+            [`${Number(run.records_per_second).toLocaleString()}/s`, "measured throughput"],
+            [`${run.records_rejected}`, `rejected (${run.reject_rate_pct}% reject rate)`],
+            [`${run.execution_seconds}s`, "wall clock"],
+            [`<span class="${freshClass}">${escapeHtml(freshness)}</span>`,
+             `last full-volume benchmark &middot; suite runs daily`],
+          ].map(([v, k]) => `<div class="run-stat"><div class="v">${v}</div><div class="k">${k}</div></div>`).join("");
+        }
+        document.getElementById("scheduling-table").innerHTML =
+          `<table><thead><tr><th>Job</th><th>Cadence</th><th>Evidence</th></tr></thead><tbody>${
+            ops.scheduling.map((j) => `<tr><td><strong>${escapeHtml(j.job)}</strong><br><span class="muted">${escapeHtml(j.trigger)}</span></td><td>${escapeHtml(j.cadence)}</td><td class="muted">${escapeHtml(j.evidence)}</td></tr>`).join("")
+          }</tbody></table>`;
+        document.getElementById("scale-table").innerHTML =
+          `<table><thead><tr><th>Dimension</th><th>Value</th><th>Basis</th></tr></thead><tbody>${
+            ops.scale_and_cost.map((x) => `<tr><td><strong>${escapeHtml(x.dimension)}</strong></td><td>${escapeHtml(x.value)}</td><td class="muted">${escapeHtml(x.basis)}</td></tr>`).join("")
+          }</tbody></table>`;
+        document.getElementById("failure-table").innerHTML =
+          `<table><thead><tr><th>Failure</th><th>Detected by</th><th>Behaviour</th><th>Blast radius</th><th>Code</th></tr></thead><tbody>${
+            ops.failure_modes.map((f) => `<tr><td><strong>${escapeHtml(f.failure)}</strong></td><td class="muted">${escapeHtml(f.detection)}</td><td>${escapeHtml(f.behaviour)}</td><td class="muted">${escapeHtml(f.blast_radius)}</td><td class="muted">${escapeHtml(f.implemented_in)}</td></tr>`).join("")
+          }</tbody></table>`;
+
+        const lin = await json("api/lineage");
+        const ls = lin.summary;
+        document.getElementById("lineage-lead").textContent =
+          `${ls.columns} columns in ${lin.target_table}. ` +
+          `${ls.direct_identifiers_in_source} direct identifiers exist in the source ` +
+          `(${lin.direct_identifiers_in_source.join(", ")}); neither is stored in raw form. ` +
+          `${ls.tokenized} columns are keyed tokens. The only column carrying an identifier is ` +
+          `${ls.columns_carrying_an_identifier.join(", ")}, which is pseudonymous at source and ` +
+          `kept because it is the analytic grain.`;
+        const kindPill = (k) => k === "tokenized"
+          ? `<span class="pill pill-tok">tokenized</span>`
+          : `<span class="pill">${escapeHtml(k)}</span>`;
+        document.getElementById("lineage-table").innerHTML =
+          `<table><thead><tr><th>Curated column</th><th>Kind</th><th>Derived from</th><th>Rule</th><th>Note</th></tr></thead><tbody>${
+            lin.columns.map((c) => `<tr><td><strong>${escapeHtml(c.column)}</strong>${c.carries_identifier ? ' <span class="pill pill-id">identifier</span>' : ""}</td><td>${kindPill(c.kind)}</td><td class="muted">${escapeHtml((c.sources || []).join(", ") || "not applicable")}</td><td>${escapeHtml(c.rule)}</td><td class="muted">${escapeHtml(c.note || "")}</td></tr>`).join("")
+          }</tbody></table>`;
+
         const stack = await json("api/stack");
         document.getElementById("implemented-stack").innerHTML = renderToolList(stack.implemented);
-        document.getElementById("planned-stack").innerHTML = renderToolList(stack.planned);
 
         document.getElementById("sql-schema").textContent = await text("api/sql-schema");
         document.getElementById("source-contract").textContent = JSON.stringify(await json("api/source-contract"), null, 2);
-        const wiki = await json("api/wiki-articles");
-        document.getElementById("wiki-nav-links").innerHTML = wiki.articles.map((article) => {
-          return `<a href="#${articleAnchorId(article.title)}">${escapeHtml(article.title)}</a>`;
-        }).join("");
-        document.getElementById("wiki-body").innerHTML = wiki.articles.map((article) => `
-          <article class="wiki-article" id="${articleAnchorId(article.title)}">
-            <h3>${escapeHtml(article.title)}</h3>
-            ${renderMarkdownBlock(article.body)}
-          </article>
-        `).join("");
       }
 
       document.getElementById("load-source").addEventListener("click", async () => {
@@ -508,6 +670,68 @@
         document.getElementById("source-output").textContent = JSON.stringify(await json("api/sample-events"), null, 2);
         document.getElementById("transform-output").textContent = JSON.stringify(await json("api/sample-transform"), null, 2);
       });
+
+      (function archPanZoom() {
+        const svg = document.getElementById("arch-svg");
+        const g = document.getElementById("arch-g");
+        const frame = document.getElementById("arch-frame");
+        if (!svg || !g || !frame) return;
+        const VIEW_W = 1180, VIEW_H = 330;
+        let scale = 1, tx = 0, ty = 0;
+        const MIN = 0.6, MAX = 6;
+        const apply = () => {
+          g.setAttribute("transform", `translate(${tx} ${ty}) scale(${scale})`);
+        };
+        const zoomAt = (factor, cx, cy) => {
+          const next = Math.min(MAX, Math.max(MIN, scale * factor));
+          if (next === scale) return;
+          // keep the point under the cursor fixed
+          tx = cx - (cx - tx) * (next / scale);
+          ty = cy - (cy - ty) * (next / scale);
+          scale = next;
+          apply();
+        };
+        const toViewBox = (evt) => {
+          const r = svg.getBoundingClientRect();
+          return [
+            (evt.clientX - r.left) / r.width * VIEW_W,
+            (evt.clientY - r.top) / r.height * VIEW_H,
+          ];
+        };
+        frame.addEventListener("wheel", (evt) => {
+          evt.preventDefault();
+          const [cx, cy] = toViewBox(evt);
+          zoomAt(evt.deltaY < 0 ? 1.15 : 1 / 1.15, cx, cy);
+        }, { passive: false });
+        let dragging = false, lastX = 0, lastY = 0;
+        svg.addEventListener("pointerdown", (evt) => {
+          dragging = true; lastX = evt.clientX; lastY = evt.clientY;
+          svg.setPointerCapture(evt.pointerId);
+        });
+        svg.addEventListener("pointermove", (evt) => {
+          if (!dragging) return;
+          const r = svg.getBoundingClientRect();
+          tx += (evt.clientX - lastX) / r.width * VIEW_W;
+          ty += (evt.clientY - lastY) / r.height * VIEW_H;
+          lastX = evt.clientX; lastY = evt.clientY;
+          apply();
+        });
+        const stop = (evt) => {
+          dragging = false;
+          if (evt.pointerId !== undefined && svg.hasPointerCapture(evt.pointerId)) {
+            svg.releasePointerCapture(evt.pointerId);
+          }
+        };
+        svg.addEventListener("pointerup", stop);
+        svg.addEventListener("pointercancel", stop);
+        document.getElementById("arch-in").addEventListener("click",
+          () => zoomAt(1.3, VIEW_W / 2, VIEW_H / 2));
+        document.getElementById("arch-out").addEventListener("click",
+          () => zoomAt(1 / 1.3, VIEW_W / 2, VIEW_H / 2));
+        document.getElementById("arch-reset").addEventListener("click", () => {
+          scale = 1; tx = 0; ty = 0; apply();
+        });
+      })();
 
       hydrate().catch((error) => {
         document.body.insertAdjacentHTML("afterbegin", `<pre style="margin:20px;">${escapeHtml(error.message)}</pre>`);

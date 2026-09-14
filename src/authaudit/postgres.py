@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any
 
-from pramanaledger.config import Settings
+from authaudit.config import Settings
 
 
 def get_db_connection(settings: Settings):
@@ -84,7 +84,9 @@ def insert_events(cursor, rows: list[dict[str, Any]], schema: str = "secure_logi
     )
 
 
-def insert_quarantine(cursor, batch_id: str, rejected_rows: list[dict[str, Any]], schema: str) -> None:
+def insert_quarantine(
+    cursor, batch_id: str, rejected_rows: list[dict[str, Any]], schema: str
+) -> None:
     if not rejected_rows:
         return
     cursor.executemany(

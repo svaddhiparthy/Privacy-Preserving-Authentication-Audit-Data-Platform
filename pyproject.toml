@@ -1,0 +1,64 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "authaudit"
+version = "0.1.0"
+description = "Privacy-preserving authentication audit data platform: queue intake, contract validation, HMAC tokenization, curated persistence, quarantine, and batch audit evidence."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "Sri Surya S. Vaddhiparthy" }]
+keywords = ["data-engineering", "privacy-engineering", "etl", "data-contracts", "audit"]
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Database",
+]
+dependencies = [
+    "boto3==1.39.12",
+    "psycopg[binary]==3.3.3",
+    "fastapi==0.115.6",
+    "uvicorn[standard]==0.34.0",
+    "pydantic==2.13.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.3.4",
+    "ruff==0.8.6",
+    "httpx==0.28.1",
+]
+
+[project.urls]
+Homepage = "https://surya.vaddhiparthy.com/privacy-preserving-authentication-audit-data-platform/"
+Source = "https://github.com/vaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform"
+
+[project.scripts]
+authaudit-ingest = "authaudit.runner:run"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+authaudit = ["py.typed"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests", "scripts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+# Standalone scripts extend sys.path before importing the package, by design.
+"scripts/*.py" = ["E402"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"

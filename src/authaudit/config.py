@@ -1,6 +1,20 @@
 import os
 from dataclasses import dataclass
 
+# Tokenization falls back to this only for local development and tests. A deployment that
+# still uses it produces HMAC tokens anyone can recompute, so it is not a usable secret.
+DEMO_HASH_SECRET = "local-demo-secret"
+
+
+def resolve_hash_secret() -> str:
+    """Secret used for HMAC tokenization, read from the environment at call time."""
+    return os.getenv("HASH_SECRET", DEMO_HASH_SECRET)
+
+
+def hash_secret_is_demo(secret: str | None = None) -> bool:
+    """True when tokenization is running on the public development fallback."""
+    return (secret if secret is not None else resolve_hash_secret()) == DEMO_HASH_SECRET
+
 
 def _env_int(name: str, default: int) -> int:
     return int(os.getenv(name, str(default)))
@@ -32,5 +46,5 @@ class Settings:
     db_user: str = os.getenv("DB_USER", "postgres")
     db_password: str = os.getenv("DB_PASSWORD", "password")
     db_schema: str = os.getenv("DB_SCHEMA", "secure_login")
-    hash_secret: str = os.getenv("HASH_SECRET", "local-demo-secret")
+    hash_secret: str = os.getenv("HASH_SECRET", DEMO_HASH_SECRET)
     quarantine_invalid_events: bool = _env_bool("QUARANTINE_INVALID_EVENTS", True)

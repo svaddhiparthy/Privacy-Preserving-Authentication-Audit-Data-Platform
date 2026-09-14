@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from pramanaledger.sources import normalize_rba_row, write_normalized_sample
+from authaudit.sources import normalize_rba_row, write_normalized_sample
 
 
 class RbaSourceTests(unittest.TestCase):
@@ -63,7 +63,7 @@ class RbaSourceTests(unittest.TestCase):
                         "Is Attack IP": "False",
                         "Is Account Takeover": "False",
                     }
-            )
+                )
             self.assertEqual(write_normalized_sample(source, output, limit=10), 1)
             rows = [json.loads(line) for line in output.read_text(encoding="utf-8").splitlines()]
             self.assertEqual(rows[0]["source_system"], "rba_dataset")

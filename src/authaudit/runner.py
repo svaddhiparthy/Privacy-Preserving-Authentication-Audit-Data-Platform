@@ -1,18 +1,18 @@
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
 
-from pramanaledger.config import Settings
-from pramanaledger.postgres import (
+from authaudit.config import Settings
+from authaudit.postgres import (
     ensure_table_exists,
     get_db_connection,
     insert_audit,
     insert_events,
     insert_quarantine,
 )
-from pramanaledger.sqs import delete_processed_messages, fetch_messages, parse_messages
-from pramanaledger.transform import transform_event
+from authaudit.sqs import delete_processed_messages, fetch_messages, parse_messages
+from authaudit.transform import transform_event
 
 LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ LOGGER = logging.getLogger(__name__)
 def run(settings: Settings | None = None) -> int:
     settings = settings or Settings()
     batch_id = uuid4().hex
-    started_at = datetime.now(timezone.utc)
+    started_at = datetime.now(UTC)
     messages = fetch_messages(settings)
     if not messages:
         LOGGER.info("No messages available in queue %s", settings.sqs_queue_url)
@@ -42,7 +42,7 @@ def run(settings: Settings | None = None) -> int:
             rejected_rows.append(
                 {
                     "batch_id": batch_id,
-                    "rejected_at_utc": datetime.now(timezone.utc),
+                    "rejected_at_utc": datetime.now(UTC),
                     "error_message": str(exc),
                     "payload": json.dumps(event),
                 }
@@ -64,7 +64,7 @@ def run(settings: Settings | None = None) -> int:
                 schema=settings.db_schema,
                 batch_id=batch_id,
                 started_at=started_at,
-                completed_at=datetime.now(timezone.utc),
+                completed_at=datetime.now(UTC),
                 messages_received=len(messages),
                 records_loaded=len(transformed_rows),
                 records_rejected=len(rejected_rows),
