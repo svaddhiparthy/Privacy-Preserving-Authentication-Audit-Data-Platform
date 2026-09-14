@@ -2,7 +2,7 @@ import json
 import logging
 from typing import Any
 
-from pramanaledger.config import Settings
+from authaudit.config import Settings
 
 LOGGER = logging.getLogger(__name__)
 

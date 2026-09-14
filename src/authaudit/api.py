@@ -1,20 +1,15 @@
 import json
-import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from uuid import uuid4
 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, PlainTextResponse, Response
 from pydantic import BaseModel
 
-PROJECT_ROOT = Path(__file__).resolve().parent
-SRC_ROOT = PROJECT_ROOT / "src"
-if str(SRC_ROOT) not in sys.path:
-    sys.path.insert(0, str(SRC_ROOT))
+from authaudit.transform import transform_event, validate_event
 
-from pramanaledger.transform import transform_event, validate_event
-
+# src/authaudit/api.py -> repository root
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 app = FastAPI(title="Privacy-Preserving Authentication Audit Pipeline")
 
@@ -60,7 +55,9 @@ def _read_csv_rows(path: Path, limit: int = 10) -> list[dict]:
 
 def _sample_events() -> list[dict]:
     external = PROJECT_ROOT / "data" / "external" / "rba" / "login_events.normalized.jsonl"
-    packaged_artifact = PROJECT_ROOT / "docs" / "artifacts" / "rba_offline" / "bronze_rba_login_events_sample.jsonl"
+    packaged_artifact = (
+        PROJECT_ROOT / "docs" / "artifacts" / "rba_offline" / "bronze_rba_login_events_sample.jsonl"
+    )
     if external.exists():
         source = external
     elif packaged_artifact.exists():
@@ -99,7 +96,7 @@ def _event_metrics() -> dict:
 
 def _audit_rows() -> list[dict]:
     rows = _transformed_events()
-    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    now = datetime.now(UTC).isoformat(timespec="seconds")
     return [
         {
             "batch_id": "demo-batch-001",
@@ -124,23 +121,27 @@ def demo_page_head() -> Response:
 
 @app.get("/health")
 def health() -> dict:
-    return {"status": "ok", "service": "pramanaledger-demo"}
+    return {"status": "ok", "service": "authaudit-demo"}
 
 
 @app.get("/healthz")
 def healthz() -> dict:
-    return {"status": "ok", "service": "pramanaledger-demo"}
+    return {"status": "ok", "service": "authaudit-demo"}
 
 
 @app.get("/api/platform-summary")
 def platform_summary() -> dict:
-    transformed = _transformed_events()
+    _transformed_events()
     metrics = _event_metrics()
     return {
         "project": "Privacy Preserving Authentication Audit Data Platform",
         "internal_name": "Privacy-Preserving Authentication Audit Data Platform",
         "public_route": "https://surya.vaddhiparthy.com/privacy-preserving-authentication-audit-data-platform",
-        "purpose": "A governed authentication-event ingestion platform that validates login telemetry, tokenizes sensitive identifiers, preserves audit evidence, and produces curated security analytics tables.",
+        "purpose": (
+            "A governed authentication-event ingestion platform that validates login telemetry, "
+            "tokenizes sensitive identifiers, preserves audit evidence, and produces curated "
+            "security analytics tables."
+        ),
         "implemented_counts": {
             "source_event_examples": metrics["source_events"],
             "curated_event_examples": metrics["curated_events"],
@@ -177,12 +178,19 @@ def source_registry() -> dict:
                 "name": "RBA Login Data Set",
                 "provider": "DAS Group / Kaggle / Zenodo",
                 "license": "CC BY 4.0",
-                "status": "adapter implemented; activate by placing the zip or CSV under data/external/rba and running scripts/prepare_rba_dataset.py",
+                "status": (
+                    "adapter implemented; activate by placing the zip or CSV under "
+                    "data/external/rba and running scripts/prepare_rba_dataset.py"
+                ),
                 "dataset_ref": "dasgroup/rba-dataset",
                 "doi": "10.5281/zenodo.6782156",
                 "kaggle_url": "https://www.kaggle.com/datasets/dasgroup/rba-dataset",
                 "zenodo_url": "https://zenodo.org/records/6782156",
-                "why_it_fits": "Synthesized login-attempt data with IP, country, ASN, user agent, device type, user ID, timestamp, RTT, login success, attack IP, and account takeover flags.",
+                "why_it_fits": (
+                    "Synthesized login-attempt data with IP, country, ASN, user agent, device "
+                    "type, user ID, timestamp, RTT, login success, attack IP, and account takeover "
+                    "flags."
+                ),
             },
             {
                 "name": "Deterministic local sample",
@@ -193,7 +201,10 @@ def source_registry() -> dict:
                 "doi": None,
                 "kaggle_url": None,
                 "zenodo_url": None,
-                "why_it_fits": "Small, safe authentication telemetry fixture for tests, demos, and production page fallback.",
+                "why_it_fits": (
+                    "Small, safe authentication telemetry fixture for tests, demos, and production "
+                    "page fallback."
+                ),
             },
         ],
     }
@@ -203,7 +214,9 @@ def source_registry() -> dict:
 def offline_artifacts() -> dict:
     artifact_root = PROJECT_ROOT / "data" / "artifacts" / "rba_offline"
     packaged_root = PROJECT_ROOT / "docs" / "artifacts" / "rba_offline"
-    root = artifact_root if (artifact_root / "offline_run_manifest.json").exists() else packaged_root
+    root = (
+        artifact_root if (artifact_root / "offline_run_manifest.json").exists() else packaged_root
+    )
     manifest_path = root / "offline_run_manifest.json"
     if not manifest_path.exists():
         return {"available": False, "metrics": {}, "table_inventory": [], "audit": {}}
@@ -226,20 +239,28 @@ def active_data_source() -> dict:
             "path": "data/external/rba/login_events.normalized.jsonl",
             "records": len(external.read_text(encoding="utf-8").splitlines()),
         }
-    packaged_artifact = PROJECT_ROOT / "docs" / "artifacts" / "rba_offline" / "bronze_rba_login_events_sample.jsonl"
+    packaged_artifact = (
+        PROJECT_ROOT / "docs" / "artifacts" / "rba_offline" / "bronze_rba_login_events_sample.jsonl"
+    )
     if packaged_artifact.exists():
         artifacts = offline_artifacts()
         return {
             "name": "RBA Login Data Set offline artifact sample",
             "type": "offline_artifact_sample",
             "path": "docs/artifacts/rba_offline/bronze_rba_login_events_sample.jsonl",
-            "records": artifacts.get("metrics", {}).get("records_processed", len(packaged_artifact.read_text(encoding="utf-8").splitlines())),
+            "records": artifacts.get("metrics", {}).get(
+                "records_processed", len(packaged_artifact.read_text(encoding="utf-8").splitlines())
+            ),
         }
     return {
         "name": "Deterministic local authentication sample",
         "type": "repository_fixture",
         "path": "sample_data/login_events.jsonl",
-        "records": len((PROJECT_ROOT / "sample_data" / "login_events.jsonl").read_text(encoding="utf-8").splitlines()),
+        "records": len(
+            (PROJECT_ROOT / "sample_data" / "login_events.jsonl")
+            .read_text(encoding="utf-8")
+            .splitlines()
+        ),
     }
 
 
@@ -251,37 +272,48 @@ def flow() -> dict:
                 "stage": "Source Contract",
                 "tooling": "JSON Schema, producer contract",
                 "artifact": "contracts/v1/login_event.schema.json",
-                "output": "LoginEvent payload with required identity, device, IP, locale, and app version fields",
+                "output": (
+                    "LoginEvent payload with required identity, device, IP, locale, and app "
+                    "version fields"
+                ),
             },
             {
                 "stage": "Queue Ingestion",
                 "tooling": "AWS SQS compatible client, LocalStack for local execution",
-                "artifact": "src/pramanaledger/sqs.py",
+                "artifact": "src/authaudit/sqs.py",
                 "output": "Bounded message batch with explicit receive and delete behavior",
             },
             {
                 "stage": "Validation",
                 "tooling": "Python validation layer",
-                "artifact": "src/pramanaledger/transform.py",
+                "artifact": "src/authaudit/transform.py",
                 "output": "Accepted payloads continue; malformed payloads are routed to quarantine",
             },
             {
                 "stage": "Privacy Transform",
                 "tooling": "HMAC-SHA256",
-                "artifact": "src/pramanaledger/tokenization.py",
-                "output": "Raw IP and device identifiers replaced with deterministic irreversible tokens",
+                "artifact": "src/authaudit/tokenization.py",
+                "output": (
+                    "Raw IP and device identifiers replaced with deterministic irreversible tokens"
+                ),
             },
             {
                 "stage": "Curated Persistence",
                 "tooling": "PostgreSQL",
-                "artifact": "src/pramanaledger/postgres.py",
-                "output": "secure_login.user_logins, secure_login.quarantine_login_events, secure_login.ingestion_audit",
+                "artifact": "src/authaudit/postgres.py",
+                "output": (
+                    "secure_login.user_logins, secure_login.quarantine_login_events, "
+                    "secure_login.ingestion_audit"
+                ),
             },
             {
                 "stage": "Operations Surface",
                 "tooling": "FastAPI, Docker, Caddy",
                 "artifact": "demo_api.py, Dockerfile, docker-compose.prod.yml",
-                "output": "Public demo, health checks, contract browser, table previews, and platform documentation",
+                "output": (
+                    "Public demo, health checks, contract browser, table previews, and platform "
+                    "documentation"
+                ),
             },
         ]
     }
@@ -298,7 +330,10 @@ def architecture() -> dict:
             "audit and health evidence",
             "public technical surface",
         ],
-        "system_positioning": "Secure event ingestion platform with privacy controls, idempotent writes, observability, and auditability.",
+        "system_positioning": (
+            "Secure event ingestion platform with privacy controls, idempotent writes, "
+            "observability, and auditability."
+        ),
     }
 
 
@@ -306,19 +341,61 @@ def architecture() -> dict:
 def stack() -> dict:
     return {
         "implemented": [
-            {"tool": "AWS SQS compatible ingestion", "role": "Queue-backed authentication event intake with local execution through LocalStack"},
-            {"tool": "Python", "role": "Validation, deterministic event identity, PII tokenization, and batch orchestration"},
-            {"tool": "PostgreSQL", "role": "Curated login fact, quarantine table, ingestion audit table, and health view"},
-            {"tool": "FastAPI", "role": "Public technical surface, live transform preview, and health endpoints"},
-            {"tool": "Docker Compose", "role": "Repeatable local services and production web container"},
+            {
+                "tool": "AWS SQS compatible ingestion",
+                "role": (
+                    "Queue-backed authentication event intake with local execution through "
+                    "LocalStack"
+                ),
+            },
+            {
+                "tool": "Python",
+                "role": (
+                    "Validation, deterministic event identity, PII tokenization, and batch "
+                    "orchestration"
+                ),
+            },
+            {
+                "tool": "PostgreSQL",
+                "role": (
+                    "Curated login fact, quarantine table, ingestion audit table, and health view"
+                ),
+            },
+            {
+                "tool": "FastAPI",
+                "role": "Public technical surface, live transform preview, and health endpoints",
+            },
+            {
+                "tool": "Docker Compose",
+                "role": "Repeatable local services and production web container",
+            },
             {"tool": "Caddy", "role": "Portfolio-domain reverse proxy and TLS edge routing"},
         ],
         "planned": [
-            {"tool": "dbt", "role": "Bronze, silver, and gold transformations with relationship and freshness tests"},
+            {
+                "tool": "dbt",
+                "role": (
+                    "Bronze, silver, and gold transformations with relationship and freshness tests"
+                ),
+            },
             {"tool": "Airflow", "role": "Scheduled ingestion, retries, backfills, and run history"},
-            {"tool": "S3", "role": "Immutable landing zone for source contracts, raw batches, and retained audit exports"},
-            {"tool": "OpenLineage-compatible model", "role": "Dataset, job, and run-level lineage representation"},
-            {"tool": "Monitoring", "role": "Reject rate, batch freshness, queue depth, and endpoint availability checks"},
+            {
+                "tool": "S3",
+                "role": (
+                    "Immutable landing zone for source contracts, raw batches, and retained audit "
+                    "exports"
+                ),
+            },
+            {
+                "tool": "OpenLineage-compatible model",
+                "role": "Dataset, job, and run-level lineage representation",
+            },
+            {
+                "tool": "Monitoring",
+                "role": (
+                    "Reject rate, batch freshness, queue depth, and endpoint availability checks"
+                ),
+            },
         ],
     }
 
@@ -329,32 +406,32 @@ def quality_gates() -> dict:
         "gates": [
             {
                 "gate": "Required field presence",
-                "implemented_in": "src/pramanaledger/transform.py",
+                "implemented_in": "src/authaudit/transform.py",
                 "failure_behavior": "Reject event and persist reason in quarantine path",
             },
             {
                 "gate": "Device type domain validation",
-                "implemented_in": "src/pramanaledger/transform.py",
+                "implemented_in": "src/authaudit/transform.py",
                 "failure_behavior": "Reject values outside ios, android, and web",
             },
             {
                 "gate": "App version normalization",
-                "implemented_in": "src/pramanaledger/transform.py",
+                "implemented_in": "src/authaudit/transform.py",
                 "failure_behavior": "Reject malformed semantic version strings",
             },
             {
                 "gate": "PII exclusion from curated model",
-                "implemented_in": "src/pramanaledger/tokenization.py",
+                "implemented_in": "src/authaudit/tokenization.py",
                 "failure_behavior": "Raw IP and device identifiers are replaced before insertion",
             },
             {
                 "gate": "Idempotent replay",
-                "implemented_in": "src/pramanaledger/postgres.py",
+                "implemented_in": "src/authaudit/postgres.py",
                 "failure_behavior": "Duplicate event_id writes are ignored instead of duplicated",
             },
             {
                 "gate": "Batch audit trail",
-                "implemented_in": "src/pramanaledger/postgres.py",
+                "implemented_in": "src/authaudit/postgres.py",
                 "failure_behavior": "Each run writes received, loaded, and rejected counts",
             },
         ],
@@ -384,14 +461,23 @@ def table_preview() -> dict:
     silver_rows = _read_jsonl(artifact_root / "silver_user_logins_sample.jsonl", limit=10)
     audit_rows = _read_csv_rows(artifact_root / "audit_ingestion_runs.csv", limit=10)
     return {
-        "preview_policy": "Only the first 10 rows are displayed for efficiency. The full public source dataset is linked in Source Registry; the local full zip is not hosted by this page.",
+        "preview_policy": (
+            "Only the first 10 rows are displayed for efficiency. The full public source dataset "
+            "is linked in Source Registry; the local full zip is not hosted by this page."
+        ),
         "source_dataset_url": "https://www.kaggle.com/datasets/dasgroup/rba-dataset",
         "groups": {
             "Input": [
                 {
                     "name": "bronze_rba_login_events",
-                    "purpose": "Input-stage records normalized from the RBA dataset before privacy tokenization.",
-                    "highlight": "Raw source features are visible here so the transformation boundary is clear.",
+                    "purpose": (
+                        "Input-stage records normalized from the RBA dataset before privacy "
+                        "tokenization."
+                    ),
+                    "highlight": (
+                        "Raw source features are visible here so the transformation boundary is "
+                        "clear."
+                    ),
                     "columns": list(bronze_rows[0]) if bronze_rows else [],
                     "sample_rows": bronze_rows,
                 }
@@ -399,34 +485,73 @@ def table_preview() -> dict:
             "Output": [
                 {
                     "name": "silver_user_logins",
-                    "purpose": "Output-stage records after validation, deterministic event identity, and HMAC tokenization.",
-                    "highlight": "Transformed values are highlighted: raw IP and device identifiers are replaced by masked tokens.",
+                    "purpose": (
+                        "Output-stage records after validation, deterministic event identity, and "
+                        "HMAC tokenization."
+                    ),
+                    "highlight": (
+                        "Transformed values are highlighted: raw IP and device identifiers are "
+                        "replaced by masked tokens."
+                    ),
                     "columns": list(silver_rows[0]) if silver_rows else [],
                     "sample_rows": silver_rows,
-                    "transformed_columns": ["event_id", "masked_ip", "masked_device_id", "source_event_hash", "pii_strategy"],
+                    "transformed_columns": [
+                        "event_id",
+                        "masked_ip",
+                        "masked_device_id",
+                        "source_event_hash",
+                        "pii_strategy",
+                    ],
                 },
                 {
                     "name": "secure_login.user_logins",
-                    "purpose": "Runtime curated login fact table produced by the same transform function.",
-                    "highlight": "This is the application-facing version of the curated login table.",
+                    "purpose": (
+                        "Runtime curated login fact table produced by the same transform function."
+                    ),
+                    "highlight": (
+                        "This is the application-facing version of the curated login table."
+                    ),
                     "columns": list(_transformed_events()[0]) if _transformed_events() else [],
                     "sample_rows": _transformed_events()[:10],
-                    "transformed_columns": ["event_id", "masked_ip", "masked_device_id", "source_event_hash", "pii_strategy"],
+                    "transformed_columns": [
+                        "event_id",
+                        "masked_ip",
+                        "masked_device_id",
+                        "source_event_hash",
+                        "pii_strategy",
+                    ],
                 },
             ],
             "Audit": [
                 {
                     "name": "audit_ingestion_runs",
-                    "purpose": "Offline execution audit evidence with source path, timing, received count, loaded count, and rejected count.",
-                    "highlight": "This proves the local offline run executed and captured load evidence.",
+                    "purpose": (
+                        "Offline execution audit evidence with source path, timing, received "
+                        "count, loaded count, and rejected count."
+                    ),
+                    "highlight": (
+                        "This proves the local offline run executed and captured load evidence."
+                    ),
                     "columns": list(audit_rows[0]) if audit_rows else [],
                     "sample_rows": audit_rows,
                 },
                 {
                     "name": "secure_login.quarantine_login_events",
-                    "purpose": "Rejected payloads and validation reasons. The latest 100,000-row offline run had zero rejected rows.",
-                    "highlight": "Empty here means no records failed validation in the displayed offline slice.",
-                    "columns": ["quarantine_id", "batch_id", "rejected_at_utc", "error_message", "payload"],
+                    "purpose": (
+                        "Rejected payloads and validation reasons. The latest 100,000-row offline "
+                        "run had zero rejected rows."
+                    ),
+                    "highlight": (
+                        "Empty here means no records failed validation in the displayed offline "
+                        "slice."
+                    ),
+                    "columns": [
+                        "quarantine_id",
+                        "batch_id",
+                        "rejected_at_utc",
+                        "error_message",
+                        "payload",
+                    ],
                     "sample_rows": [],
                 },
             ],
@@ -446,12 +571,12 @@ def source_contract() -> dict:
 
 @app.get("/api/wiki", response_class=PlainTextResponse)
 def wiki() -> str:
-    return _read_text("docs/wiki/pramanaledger_knowledge_bank.md")
+    return _read_text("docs/wiki/authaudit_knowledge_bank.md")
 
 
 @app.get("/api/wiki-articles")
 def wiki_articles() -> dict:
-    markdown = _read_text("docs/wiki/pramanaledger_knowledge_bank.md")
+    markdown = _read_text("docs/wiki/authaudit_knowledge_bank.md")
     articles = []
     current = None
     for line in markdown.splitlines():
@@ -463,16 +588,34 @@ def wiki_articles() -> dict:
             current["body"].append(line)
     if current:
         articles.append(current)
-    return {"articles": [{"title": item["title"], "body": "\n".join(item["body"]).strip()} for item in articles]}
+    return {
+        "articles": [
+            {"title": item["title"], "body": "\n".join(item["body"]).strip()} for item in articles
+        ]
+    }
 
 
 @app.get("/api/working-notes", response_class=PlainTextResponse)
 def working_notes() -> str:
-    return _read_text("docs/wiki/privacy_preserving_authentication_audit_data_platform_working_notes.txt")
+    return _read_text(
+        "docs/wiki/privacy_preserving_authentication_audit_data_platform_working_notes.txt"
+    )
 
 
 @app.post("/api/validate")
 def validate(payload: DemoEvent) -> dict:
+    """Validate one event and return either the curated row or the rejection reason.
+
+    This mirrors the worker: a record that fails the contract is reported with the reason that
+    would be written to the quarantine table, rather than raising.
+    """
     event = payload.model_dump()
-    validate_event(event)
+    try:
+        validate_event(event)
+    except ValueError as rejection:
+        return {
+            "valid": False,
+            "error_message": str(rejection),
+            "quarantine_target": "secure_login.quarantine_login_events",
+        }
     return {"valid": True, "transformed": transform_event(event, batch_id="interactive-demo")}
