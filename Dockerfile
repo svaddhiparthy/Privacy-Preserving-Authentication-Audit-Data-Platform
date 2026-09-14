@@ -15,8 +15,7 @@ COPY sample_data /app/sample_data
 COPY scripts /app/scripts
 COPY sql /app/sql
 COPY src /app/src
-COPY code_fetch_vaddhiparthy.py demo_api.py /app/
 
 EXPOSE 8075
 
-CMD ["uvicorn", "demo_api:app", "--host", "0.0.0.0", "--port", "8075"]
+CMD ["uvicorn", "authaudit.api:app", "--host", "0.0.0.0", "--port", "8075"]

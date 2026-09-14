@@ -1,9 +1,8 @@
 import csv
 import json
 import zipfile
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
-
 
 RBA_COLUMNS = {
     "ip_address": ["IP Address", "ip", "ip_address"],
@@ -57,14 +56,18 @@ def _risk_band(login_successful: bool, is_attack_ip: bool, is_account_takeover: 
 def normalize_rba_row(row: dict[str, str]) -> dict[str, str]:
     login_successful = _bool_text(_first_present(row, RBA_COLUMNS["login_successful"], "true"))
     is_attack_ip = _bool_text(_first_present(row, RBA_COLUMNS["is_attack_ip"], "false"))
-    is_account_takeover = _bool_text(_first_present(row, RBA_COLUMNS["is_account_takeover"], "false"))
+    is_account_takeover = _bool_text(
+        _first_present(row, RBA_COLUMNS["is_account_takeover"], "false")
+    )
     user_id = _first_present(row, RBA_COLUMNS["user_id"], "unknown_user")
     device_type = _map_device_type(_first_present(row, RBA_COLUMNS["device_type"], "web"))
     raw_timestamp = _first_present(row, RBA_COLUMNS["login_timestamp"], "")
+    browser = _first_present(row, RBA_COLUMNS["browser"], "browser_unknown")
+    operating_system = _first_present(row, RBA_COLUMNS["os"], "os_unknown")
     return {
         "user_id": f"rba_user_{user_id}",
         "device_type": device_type,
-        "device_id": f"{device_type}:{_first_present(row, RBA_COLUMNS['browser'], 'browser_unknown')}:{_first_present(row, RBA_COLUMNS['os'], 'os_unknown')}",
+        "device_id": f"{device_type}:{browser}:{operating_system}",
         "ip": _first_present(row, RBA_COLUMNS["ip_address"], "0.0.0.0"),
         "locale": _first_present(row, RBA_COLUMNS["country"], "unknown"),
         "app_version": "1.0.0",

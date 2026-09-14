@@ -2,12 +2,21 @@
 
 Privacy Preserving Authentication Audit Data Platform is a local-first data engineering project for secure authentication-event ingestion. The platform consumes login-event messages from an SQS-compatible queue, validates the event contract, tokenizes sensitive fields with secret-keyed HMAC-SHA256, writes idempotent analytical records into PostgreSQL, quarantines malformed records, and records batch-level audit evidence.
 
-The short internal product name is `Privacy-Preserving Authentication Audit Data Platform`.
+The Python package is `authaudit`.
 
-The public route planned for the portfolio surface is:
+The public technical surface is live at:
 
 ```text
-https://surya.vaddhiparthy.com/privacy-preserving-authentication-audit-data-platform
+https://surya.vaddhiparthy.com/privacy-preserving-authentication-audit-data-platform/
+```
+
+## How to verify
+
+```bash
+pip install -e ".[dev]"   # install the package and dev tooling
+pytest                    # 62 tests across transform, tokenization, persistence, queue, and API
+ruff check .              # lint
+curl -fsS https://surya.vaddhiparthy.com/privacy-preserving-authentication-audit-data-platform/healthz
 ```
 
 ## Current Implementation
@@ -16,16 +25,16 @@ The current working implementation is intentionally compact and testable:
 
 | Capability | Status | Implementation |
 |---|---|---|
-| SQS-compatible ingestion | Working locally | LocalStack SQS plus `pramanaledger.sqs` |
-| Contract validation | Working | `pramanaledger.transform.validate_event` |
-| PII tokenization | Working | HMAC-SHA256 in `pramanaledger.tokenization` |
+| SQS-compatible ingestion | Working locally | LocalStack SQS plus `authaudit.sqs` |
+| Contract validation | Working | `authaudit.transform.validate_event` |
+| PII tokenization | Working | HMAC-SHA256 in `authaudit.tokenization` |
 | Deterministic event ID | Working | HMAC over canonical event hash |
 | PostgreSQL curated table | Working | `secure_login.user_logins` |
 | Quarantine table | Working | `secure_login.quarantine_login_events` |
 | Batch audit table | Working | `secure_login.ingestion_audit` |
-| Demo API | Working locally and deployed | `demo_api.py` |
+| Demo API | Working locally and deployed | `authaudit.api` |
 | Public technical surface | Working | Platform summary, flow, transform preview, data browser, schema, contract, controls, and knowledge bank |
-| Unit tests | Working | `tests/test_code_fetch_vaddhiparthy.py` |
+| Unit tests | Working | 62 tests in `tests/`, run by GitHub Actions on every push |
 
 ## Architecture
 
@@ -56,18 +65,18 @@ The platform uses deterministic idempotency rather than source-provided identifi
 ## Package Layout
 
 ```text
-src/pramanaledger/
+src/authaudit/
   config.py        # environment-backed runtime settings
   tokenization.py  # hash and HMAC helpers
   transform.py     # validation and event transformation
   sqs.py           # SQS receive/delete helpers
   postgres.py      # schema creation and persistence functions
   runner.py        # batch orchestration
+  api.py           # FastAPI public technical surface
 
-code_fetch_vaddhiparthy.py  # compatibility entrypoint
-demo_api.py                 # local FastAPI demo service
 sql/                        # database schema
 docs/                       # architecture and wiki-ready documentation
+scripts/                    # dataset preparation and offline pipeline runs
 tests/                      # unit tests
 ```
 
@@ -148,13 +157,13 @@ aws --endpoint-url=http://localhost:4566 sqs send-message `
 Run the ingestion worker:
 
 ```powershell
-python code_fetch_vaddhiparthy.py
+python -m authaudit.runner
 ```
 
 Run the demo API:
 
 ```powershell
-uvicorn demo_api:app --reload --port 8075
+uvicorn authaudit.api:app --reload --port 8075
 ```
 
 Open:
@@ -162,6 +171,14 @@ Open:
 ```text
 http://127.0.0.1:8075
 ```
+
+## Secrets
+
+`HASH_SECRET` keys the HMAC tokenization. It is resolved from the environment on every call.
+If it is unset, the package falls back to `DEMO_HASH_SECRET` for local development, and tokens
+produced with that fallback are reproducible by anyone. Any deployment that publishes tokens
+must set a real `HASH_SECRET`; `authaudit.config.hash_secret_is_demo()` reports whether the
+fallback is in force.
 
 ## Configuration
 
@@ -196,8 +213,8 @@ python -m unittest discover -s tests -p "test_*.py"
 Compile the Python modules:
 
 ```powershell
-Get-ChildItem src\pramanaledger\*.py | ForEach-Object { python -m py_compile $_.FullName }
-python -m py_compile code_fetch_vaddhiparthy.py demo_api.py
+ruff check .
+pytest
 ```
 
 Run the smoke script:
@@ -217,7 +234,7 @@ The next implementation target is to expand this into a full technical portfolio
 5. Airflow orchestration.
 6. Technical control room with pipeline status, quality status, table browser, and transformation previews.
 7. Wiki-style knowledge bank.
-8. Public portfolio route at the planned slug.
+8. Bronze, Silver, and Gold layer separation in the warehouse.
 
 The system will remain local-first. Real cloud services are optional and should only be enabled after the local path is working and tested.
 
@@ -227,14 +244,14 @@ The deployed page is a technical surface, not only a landing page. It currently 
 
 | Section | Backing asset |
 |---|---|
-| Platform overview | `demo_api.platform_summary` |
-| Data flow | `demo_api.flow` |
-| Live transform preview | `sample_data/login_events.jsonl` plus `pramanaledger.transform` |
-| Data table browser | `demo_api.table_preview` |
+| Platform overview | `authaudit.api.platform_summary` |
+| Data flow | `authaudit.api.flow` |
+| Live transform preview | `sample_data/login_events.jsonl` plus `authaudit.transform` |
+| Data table browser | `authaudit.api.table_preview` |
 | PostgreSQL schema viewer | `sql/001_secure_login_schema.sql` |
 | Source contract viewer | `contracts/v1/login_event.schema.json` |
-| Quality and privacy gates | `demo_api.quality_gates` |
-| Knowledge bank | `docs/wiki/pramanaledger_knowledge_bank.md` |
+| Quality and privacy gates | `authaudit.api.quality_gates` |
+| Knowledge bank | `docs/wiki/authaudit_knowledge_bank.md` |
 
 The sample dataset is deterministic synthetic authentication telemetry. It is intentionally generated rather than scraped from public user activity because authentication logs are sensitive by nature and public samples are often licensed, stale, or stripped of useful operational fields.
 
@@ -285,7 +302,7 @@ The adapter maps RBA columns into the platform contract:
 The RBA adapter lives in:
 
 ```text
-src/pramanaledger/sources.py
+src/authaudit/sources.py
 scripts/prepare_rba_dataset.py
 ```
 

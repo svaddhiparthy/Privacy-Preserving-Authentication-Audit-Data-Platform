@@ -1,7 +1,6 @@
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
-
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "sample_data" / "login_events.jsonl"
@@ -12,7 +11,7 @@ def main() -> None:
     locales = ["en_US", "en_GB", "es_US", "fr_CA", "hi_IN"]
     networks = ["10.10.1.", "10.10.2.", "172.16.5.", "192.168.44.", "100.64.8."]
     users = [f"user_{1000 + i}" for i in range(30)]
-    base = datetime(2026, 4, 20, 8, 0, tzinfo=timezone.utc)
+    base = datetime(2026, 4, 20, 8, 0, tzinfo=UTC)
     rows = []
     for i in range(120):
         user = users[i % len(users)]

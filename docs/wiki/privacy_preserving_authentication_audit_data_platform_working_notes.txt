@@ -17,8 +17,8 @@ This page records critical directional decisions, implementation checkpoints, an
 
 ===== 2026-04-27 — Refactor Checkpoint =====
 
-  * The original flat ingestion script was modularized into src/pramanaledger.
-  * code_fetch_vaddhiparthy.py remains as a compatibility entrypoint.
+  * The original flat ingestion script was modularized into src/authaudit.
+  * The public FastAPI surface lives in the package as authaudit.api.
   * Unit tests continue to pass after modularization.
 
 ===== Future Notes Protocol =====
