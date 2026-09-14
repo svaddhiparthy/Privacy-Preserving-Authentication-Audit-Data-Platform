@@ -23,8 +23,12 @@ services:
     expose:
       - "8075"
     networks:
-      - platform_edge
-      - professional_net
+      platform_edge:
+        aliases:
+          # Compatibility alias: the edge proxy's loaded config still names the old
+          # service. Remove once the edge has reloaded against the renamed upstream.
+          - professional-pramanaledger
+      professional_net: {}
 networks:
   platform_edge:
     external: true
