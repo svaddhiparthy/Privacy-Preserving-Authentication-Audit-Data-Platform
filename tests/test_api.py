@@ -4,7 +4,7 @@ import unittest
 
 from fastapi.testclient import TestClient
 
-from authaudit.api import app
+from authaudit.api import TEST_COUNT, app
 
 client = TestClient(app)
 
@@ -106,3 +106,28 @@ class EvidenceTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class HeadlineMetricsTests(unittest.TestCase):
+    """The hero must lead with the audited run, not the demo fixture."""
+
+    def setUp(self) -> None:
+        self.metrics = client.get("/api/platform-summary").json()["headline_metrics"]
+
+    def test_six_headline_metrics_are_published(self) -> None:
+        self.assertEqual(len(self.metrics), 6)
+        for m in self.metrics:
+            with self.subTest(m=m):
+                self.assertTrue(m["value"])
+                self.assertTrue(m["label"])
+
+    def test_leads_with_the_full_run_volume(self) -> None:
+        self.assertEqual(self.metrics[0]["value"], "100,000")
+
+    def test_reports_throughput_and_a_clean_contract_pass(self) -> None:
+        self.assertIn("k/s", self.metrics[1]["value"])
+        self.assertEqual(self.metrics[2]["value"], "100.0%")
+
+    def test_test_count_matches_the_suite(self) -> None:
+        counts = client.get("/api/platform-summary").json()["implemented_counts"]
+        self.assertEqual(counts["unit_tests"], TEST_COUNT)

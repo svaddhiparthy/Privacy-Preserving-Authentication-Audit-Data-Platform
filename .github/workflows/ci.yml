@@ -38,6 +38,8 @@ jobs:
         run: pip install -e ".[dev]"
       - name: Pytest
         run: pytest
+      - name: Published test count matches the suite
+        run: python scripts/check_test_count.py
 
   contracts:
     name: Contract and artifact checks
