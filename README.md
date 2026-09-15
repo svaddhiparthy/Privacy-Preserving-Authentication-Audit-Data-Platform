@@ -7,16 +7,16 @@ The Python package is `authaudit`.
 The public technical surface is live at:
 
 ```text
-https://surya.vaddhiparthy.com/privacy-preserving-authentication-audit-data-platform/
+https://srivaddhiparthy.com/privacy-preserving-authentication-audit-data-platform/
 ```
 
 ## How to verify
 
 ```bash
 pip install -e ".[dev]"   # install the package and dev tooling
-pytest                    # 83 tests across transform, tokenization, persistence, queue, and API
+pytest                    # 84 tests across transform, tokenization, persistence, queue, and API
 ruff check .              # lint
-curl -fsS https://surya.vaddhiparthy.com/privacy-preserving-authentication-audit-data-platform/healthz
+curl -fsS https://srivaddhiparthy.com/privacy-preserving-authentication-audit-data-platform/healthz
 ```
 
 ## Current Implementation
@@ -34,7 +34,7 @@ The current working implementation is intentionally compact and testable:
 | Batch audit table | Working | `secure_login.ingestion_audit` |
 | Demo API | Working locally and deployed | `authaudit.api` |
 | Public technical surface | Working | Platform summary, flow, transform preview, data browser, schema, contract, controls, and knowledge bank |
-| Unit tests | Working | 83 tests in `tests/`, run by GitHub Actions on every push |
+| Unit tests | Working | 84 tests in `tests/`, run by GitHub Actions on every push |
 
 ## Architecture
 

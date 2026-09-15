@@ -9,7 +9,7 @@ description = "Privacy-preserving authentication audit data platform: queue inta
 readme = "README.md"
 requires-python = ">=3.11"
 license = { file = "LICENSE" }
-authors = [{ name = "Sri Surya S. Vaddhiparthy" }]
+authors = [{ name = "Sri Vaddhiparthy" }]
 keywords = ["data-engineering", "privacy-engineering", "etl", "data-contracts", "audit"]
 classifiers = [
     "Programming Language :: Python :: 3.11",
@@ -31,8 +31,8 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://surya.vaddhiparthy.com/privacy-preserving-authentication-audit-data-platform/"
-Source = "https://github.com/vaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform"
+Homepage = "https://srivaddhiparthy.com/privacy-preserving-authentication-audit-data-platform/"
+Source = "https://github.com/svaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform"
 
 [project.scripts]
 authaudit-ingest = "authaudit.runner:run"

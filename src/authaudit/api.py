@@ -131,7 +131,7 @@ def healthz() -> dict:
     return {"status": "ok", "service": "authaudit-demo"}
 
 
-TEST_COUNT = 83
+TEST_COUNT = 84
 
 
 def headline_metrics() -> list[dict]:
@@ -172,7 +172,7 @@ def platform_summary() -> dict:
     return {
         "project": "Privacy Preserving Authentication Audit Data Platform",
         "internal_name": "Privacy-Preserving Authentication Audit Data Platform",
-        "public_route": "https://surya.vaddhiparthy.com/privacy-preserving-authentication-audit-data-platform",
+        "public_route": "https://srivaddhiparthy.com/privacy-preserving-authentication-audit-data-platform",
         "purpose": (
             "A governed authentication-event ingestion platform that validates login telemetry, "
             "tokenizes sensitive identifiers, preserves audit evidence, and produces curated "
