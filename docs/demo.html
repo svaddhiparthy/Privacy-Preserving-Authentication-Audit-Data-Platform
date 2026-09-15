@@ -252,9 +252,9 @@
             persistence, a quarantine path for rejected records, and batch-level audit evidence.
             Every number and preview on this page is produced by the running service.</p>
           <div class="hero-links">
-            <a class="lnk" href="https://github.com/vaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform" target="_blank" rel="noreferrer">&#9679;&nbsp; Source code</a>
-            <a class="lnk" href="https://github.com/vaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform/actions" target="_blank" rel="noreferrer"><img
-              src="https://github.com/vaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform/actions/workflows/ci.yml/badge.svg?branch=main"
+            <a class="lnk" href="https://github.com/svaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform" target="_blank" rel="noreferrer">&#9679;&nbsp; Source code</a>
+            <a class="lnk" href="https://github.com/svaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform/actions" target="_blank" rel="noreferrer"><img
+              src="https://github.com/svaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform/actions/workflows/ci.yml/badge.svg?branch=main"
               alt="CI status" style="height:18px;display:block;"></a>
             <a class="lnk" href="#verify">How to verify</a>
           </div>
@@ -509,23 +509,23 @@
         <p class="lead">Nothing here is a screenshot. Clone the repository and reproduce it, or
           call the running service directly.</p>
         <pre class="verify"><span class="cmt"># run the suite that gates every push</span>
-git clone https://github.com/vaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform.git
+git clone https://github.com/svaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform.git
 cd Privacy-Preserving-Authentication-Audit-Data-Platform
 pip install -e ".[dev]" &amp;&amp; pytest &amp;&amp; ruff check .
 
 <span class="cmt"># or call this deployment</span>
-curl -s https://surya.vaddhiparthy.com/privacy-preserving-authentication-audit-data-platform/healthz</pre>
+curl -s https://srivaddhiparthy.com/privacy-preserving-authentication-audit-data-platform/healthz</pre>
         <div class="hero-links" style="margin-top:14px;">
-          <a class="lnk" href="https://github.com/vaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform" target="_blank" rel="noreferrer">Repository</a>
-          <a class="lnk" href="https://github.com/vaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform/blob/main/docs/wiki/authaudit_knowledge_bank.md"
+          <a class="lnk" href="https://github.com/svaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform" target="_blank" rel="noreferrer">Repository</a>
+          <a class="lnk" href="https://github.com/svaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform/blob/main/docs/wiki/authaudit_knowledge_bank.md"
              target="_blank" rel="noreferrer">Design notes and rationale</a>
-          <a class="lnk" href="https://github.com/vaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform/blob/main/docs/architecture.md" target="_blank"
+          <a class="lnk" href="https://github.com/svaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform/blob/main/docs/architecture.md" target="_blank"
              rel="noreferrer">Architecture write-up</a>
         </div>
       </section>
 
       <footer>
-        Built by Sri Surya S. Vaddhiparthy. Public technical surface for a local-first authentication audit platform.
+        Built by <span data-public-display-name>Sri Vaddhiparthy</span>. Public technical surface for a local-first authentication audit platform.
       </footer>
     </main>
 
@@ -536,6 +536,16 @@ curl -s https://surya.vaddhiparthy.com/privacy-preserving-authentication-audit-d
       });
       const json = (path) => api(path).then((r) => r.json());
       const text = (path) => api(path).then((r) => r.text());
+      fetch("/data/site-content.json", { cache: "no-store" })
+        .then((response) => response.ok ? response.json() : Promise.reject(new Error("identity unavailable")))
+        .then((payload) => {
+          const name = payload?.identity?.display_name;
+          if (!name) return;
+          document.querySelectorAll("[data-public-display-name]").forEach((element) => {
+            element.textContent = name;
+          });
+        })
+        .catch(() => {});
       const escapeHtml = (value) => String(value ?? "")
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
