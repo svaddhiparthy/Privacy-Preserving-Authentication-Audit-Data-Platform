@@ -539,10 +539,32 @@ curl -s https://srivaddhiparthy.com/privacy-preserving-authentication-audit-data
       fetch("/data/site-content.json", { cache: "no-store" })
         .then((response) => response.ok ? response.json() : Promise.reject(new Error("identity unavailable")))
         .then((payload) => {
-          const name = payload?.identity?.display_name;
+          const identity = payload?.identity || {};
+          const name = identity.display_name;
           if (!name) return;
           document.querySelectorAll("[data-public-display-name]").forEach((element) => {
             element.textContent = name;
+          });
+          const replacePublicRoots = (value) => {
+            let result = value;
+            const portfolioRoot = (identity.portfolio_url || "").replace(/\/$/, "");
+            const githubRoot = (identity.github_url || "").replace(/\/$/, "");
+            ["https://surya.vaddhiparthy.com", "https://srivaddhiparthy.com"].forEach((root) => {
+              if (portfolioRoot) result = result.replaceAll(root, portfolioRoot);
+            });
+            ["https://github.com/vaddhiparthy", "https://github.com/svaddhiparthy"].forEach((root) => {
+              if (githubRoot) result = result.replaceAll(root, githubRoot);
+            });
+            return result;
+          };
+          document.querySelectorAll("a[href]").forEach((element) => {
+            element.href = replacePublicRoots(element.href);
+          });
+          document.querySelectorAll("img[src]").forEach((element) => {
+            element.src = replacePublicRoots(element.src);
+          });
+          document.querySelectorAll("pre, code").forEach((element) => {
+            element.textContent = replacePublicRoots(element.textContent);
           });
         })
         .catch(() => {});

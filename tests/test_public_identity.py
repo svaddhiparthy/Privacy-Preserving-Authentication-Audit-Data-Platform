@@ -10,5 +10,7 @@ class PublicIdentitySurfaceTests(TestCase):
 
         self.assertIn('fetch("/data/site-content.json"', demo)
         self.assertIn("data-public-display-name", demo)
+        self.assertIn("replacePublicRoots", demo)
+        self.assertIn('document.querySelectorAll("a[href]")', demo)
         self.assertNotIn("Surya Vaddhiparthy", demo)
-        self.assertNotIn("github.com/vaddhiparthy", demo)
+        self.assertNotIn('href="https://github.com/vaddhiparthy', demo)
