@@ -16,7 +16,10 @@ from authaudit.transform import transform_event, validate_event
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 app = FastAPI(title="Privacy-Preserving Authentication Audit Pipeline")
-_DOMAIN = re.compile(r"^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$|^localhost$", re.I)
+_DOMAIN = re.compile(
+    r"^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$|^localhost$",
+    re.I,
+)
 
 
 def public_route() -> str:
@@ -232,7 +235,10 @@ def source_registry() -> dict:
                 ),
                 "dataset_ref": "dasgroup/rba-dataset",
                 "doi": "10.5281/zenodo.6782156",
-                "source_reference": "Kaggle dataset dasgroup/rba-dataset; Zenodo DOI 10.5281/zenodo.6782156",
+                "source_reference": (
+                    "Kaggle dataset dasgroup/rba-dataset; "
+                    "Zenodo DOI 10.5281/zenodo.6782156"
+                ),
                 "why_it_fits": (
                     "Synthesized login-attempt data with IP, country, ASN, user agent, device "
                     "type, user ID, timestamp, RTT, login success, attack IP, and account takeover "
