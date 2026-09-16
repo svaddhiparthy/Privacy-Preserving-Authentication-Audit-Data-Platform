@@ -252,10 +252,6 @@
             persistence, a quarantine path for rejected records, and batch-level audit evidence.
             Every number and preview on this page is produced by the running service.</p>
           <div class="hero-links">
-            <a class="lnk" href="https://github.com/svaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform" target="_blank" rel="noreferrer">&#9679;&nbsp; Source code</a>
-            <a class="lnk" href="https://github.com/svaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform/actions" target="_blank" rel="noreferrer"><img
-              src="https://github.com/svaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform/actions/workflows/ci.yml/badge.svg?branch=main"
-              alt="CI status" style="height:18px;display:block;"></a>
             <a class="lnk" href="#verify">How to verify</a>
           </div>
         </div>
@@ -509,18 +505,12 @@
         <p class="lead">Nothing here is a screenshot. Clone the repository and reproduce it, or
           call the running service directly.</p>
         <pre class="verify"><span class="cmt"># run the suite that gates every push</span>
-git clone https://github.com/svaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform.git
-cd Privacy-Preserving-Authentication-Audit-Data-Platform
 pip install -e ".[dev]" &amp;&amp; pytest &amp;&amp; ruff check .
 
-<span class="cmt"># or call this deployment</span>
-curl -s https://srivaddhiparthy.com/privacy-preserving-authentication-audit-data-platform/healthz</pre>
+<span class="cmt"># or call the current configured project route</span>
+curl -s /privacy-preserving-authentication-audit-data-platform/healthz</pre>
         <div class="hero-links" style="margin-top:14px;">
-          <a class="lnk" href="https://github.com/svaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform" target="_blank" rel="noreferrer">Repository</a>
-          <a class="lnk" href="https://github.com/svaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform/blob/main/docs/wiki/authaudit_knowledge_bank.md"
-             target="_blank" rel="noreferrer">Design notes and rationale</a>
-          <a class="lnk" href="https://github.com/svaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform/blob/main/docs/architecture.md" target="_blank"
-             rel="noreferrer">Architecture write-up</a>
+          <a class="lnk" href="#architecture">Architecture write-up</a>
         </div>
       </section>
 
@@ -548,13 +538,7 @@ curl -s https://srivaddhiparthy.com/privacy-preserving-authentication-audit-data
           const replacePublicRoots = (value) => {
             let result = value;
             const portfolioRoot = (identity.portfolio_url || "").replace(/\/$/, "");
-            const githubRoot = (identity.github_url || "").replace(/\/$/, "");
-            ["https://surya.vaddhiparthy.com", "https://srivaddhiparthy.com"].forEach((root) => {
-              if (portfolioRoot) result = result.replaceAll(root, portfolioRoot);
-            });
-            ["https://github.com/vaddhiparthy", "https://github.com/svaddhiparthy"].forEach((root) => {
-              if (githubRoot) result = result.replaceAll(root, githubRoot);
-            });
+            if (portfolioRoot) result = result.replaceAll(window.location.origin, portfolioRoot);
             return result;
           };
           document.querySelectorAll("a[href]").forEach((element) => {
@@ -610,7 +594,7 @@ curl -s https://srivaddhiparthy.com/privacy-preserving-authentication-audit-data
           ["Execution seconds", artifacts.audit.execution_seconds]
         ] : [["Offline artifacts", "not available"]];
         document.getElementById("offline-artifact-metrics").innerHTML = metricCards.map(([label, value]) => `<div class="card"><div class="metric">${escapeHtml(value)}</div><div class="muted">${escapeHtml(label)}</div></div>`).join("");
-        document.getElementById("source-registry").innerHTML = `<table><thead><tr><th>Source</th><th>Provider</th><th>Links</th><th>Status</th><th>Fit</th></tr></thead><tbody>${sources.available_sources.map((source) => `<tr><td><strong>${escapeHtml(source.name)}</strong><br><span class="muted">${escapeHtml(source.dataset_ref)}</span></td><td>${escapeHtml(source.provider)}<br><span class="muted">${escapeHtml(source.license)}</span></td><td>${source.kaggle_url ? `<a class="inline-link" href="${escapeHtml(source.kaggle_url)}" target="_blank" rel="noreferrer">Kaggle</a><br>` : ""}${source.zenodo_url ? `<a class="inline-link" href="${escapeHtml(source.zenodo_url)}" target="_blank" rel="noreferrer">Zenodo</a>` : ""}</td><td>${escapeHtml(source.status)}</td><td>${escapeHtml(source.why_it_fits)}</td></tr>`).join("")}</tbody></table>`;
+        document.getElementById("source-registry").innerHTML = `<table><thead><tr><th>Source</th><th>Provider</th><th>Reference</th><th>Status</th><th>Fit</th></tr></thead><tbody>${sources.available_sources.map((source) => `<tr><td><strong>${escapeHtml(source.name)}</strong><br><span class="muted">${escapeHtml(source.dataset_ref)}</span></td><td>${escapeHtml(source.provider)}<br><span class="muted">${escapeHtml(source.license)}</span></td><td>${escapeHtml(source.source_reference || "")}</td><td>${escapeHtml(source.status)}</td><td>${escapeHtml(source.why_it_fits)}</td></tr>`).join("")}</tbody></table>`;
 
         const tables = await json("api/table-preview");
         const groupSelect = document.getElementById("table-group-select");
