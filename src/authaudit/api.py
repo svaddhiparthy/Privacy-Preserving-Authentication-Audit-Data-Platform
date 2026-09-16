@@ -1,4 +1,6 @@
 import json
+import os
+import re
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -14,6 +16,18 @@ from authaudit.transform import transform_event, validate_event
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 app = FastAPI(title="Privacy-Preserving Authentication Audit Pipeline")
+_DOMAIN = re.compile(
+    r"^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$|^localhost$",
+    re.I,
+)
+
+
+def public_route() -> str:
+    """Return the configured canonical route without trusting request headers."""
+    domain = os.getenv("SITE_DOMAIN", "localhost").strip().lower().rstrip(".")
+    if not _DOMAIN.fullmatch(domain):
+        domain = "localhost"
+    return f"https://{domain}/privacy-preserving-authentication-audit-data-platform"
 
 
 class DemoEvent(BaseModel):
@@ -172,7 +186,7 @@ def platform_summary() -> dict:
     return {
         "project": "Privacy Preserving Authentication Audit Data Platform",
         "internal_name": "Privacy-Preserving Authentication Audit Data Platform",
-        "public_route": "https://srivaddhiparthy.com/privacy-preserving-authentication-audit-data-platform",
+        "public_route": public_route(),
         "purpose": (
             "A governed authentication-event ingestion platform that validates login telemetry, "
             "tokenizes sensitive identifiers, preserves audit evidence, and produces curated "
@@ -221,8 +235,10 @@ def source_registry() -> dict:
                 ),
                 "dataset_ref": "dasgroup/rba-dataset",
                 "doi": "10.5281/zenodo.6782156",
-                "kaggle_url": "https://www.kaggle.com/datasets/dasgroup/rba-dataset",
-                "zenodo_url": "https://zenodo.org/records/6782156",
+                "source_reference": (
+                    "Kaggle dataset dasgroup/rba-dataset; "
+                    "Zenodo DOI 10.5281/zenodo.6782156"
+                ),
                 "why_it_fits": (
                     "Synthesized login-attempt data with IP, country, ASN, user agent, device "
                     "type, user ID, timestamp, RTT, login success, attack IP, and account takeover "
@@ -236,8 +252,7 @@ def source_registry() -> dict:
                 "status": "active fallback",
                 "dataset_ref": "sample_data/login_events.jsonl",
                 "doi": None,
-                "kaggle_url": None,
-                "zenodo_url": None,
+                "source_reference": "Repository fixture",
                 "why_it_fits": (
                     "Small, safe authentication telemetry fixture for tests, demos, and production "
                     "page fallback."
