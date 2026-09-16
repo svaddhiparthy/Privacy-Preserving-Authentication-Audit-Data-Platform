@@ -7,7 +7,7 @@ The Python package is `authaudit`.
 The public technical surface is live at:
 
 ```text
-https://srivaddhiparthy.com/privacy-preserving-authentication-audit-data-platform/
+configured portfolio `/privacy-preserving-authentication-audit-data-platform/` route
 ```
 
 ## How to verify
@@ -16,7 +16,7 @@ https://srivaddhiparthy.com/privacy-preserving-authentication-audit-data-platfor
 pip install -e ".[dev]"   # install the package and dev tooling
 pytest                    # 84 tests across transform, tokenization, persistence, queue, and API
 ruff check .              # lint
-curl -fsS https://srivaddhiparthy.com/privacy-preserving-authentication-audit-data-platform/healthz
+curl -fsS "https://${SITE_DOMAIN}/privacy-preserving-authentication-audit-data-platform/healthz"
 ```
 
 ## Current Implementation
