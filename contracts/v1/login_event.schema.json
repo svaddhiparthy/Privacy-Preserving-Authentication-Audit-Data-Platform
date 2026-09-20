@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://srivaddhiparthy.com/privacy-preserving-authentication-audit-data-platform/contracts/v1/login_event.schema.json",
+  "$id": "https://vaddhiparthy.com/privacy-preserving-authentication-audit-data-platform/contracts/v1/login_event.schema.json",
   "title": "LoginEvent",
   "type": "object",
   "additionalProperties": true,
