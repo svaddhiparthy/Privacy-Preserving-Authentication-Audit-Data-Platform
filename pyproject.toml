@@ -31,7 +31,7 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://srivaddhiparthy.com/privacy-preserving-authentication-audit-data-platform/"
+Homepage = "https://vaddhiparthy.com/privacy-preserving-authentication-audit-data-platform/"
 Source = "https://github.com/svaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform"
 
 [project.scripts]
