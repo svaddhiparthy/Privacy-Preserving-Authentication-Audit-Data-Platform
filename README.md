@@ -290,10 +290,9 @@ src/authaudit/
 
 contracts/v1/      versioned JSON Schema contract
 sql/               PostgreSQL DDL and the health view
-scripts/           sample generation, dataset preparation, offline run, test-count gate,
-                   local smoke script mirroring the CI lint and test jobs
+scripts/           sample generation, dataset preparation, offline run, test-count gate
 sample_data/       120-row deterministic fixture
-docs/              architecture notes, knowledge bank, served page, offline run artifacts
+docs/              served page, knowledge bank, offline run artifacts
 tests/             unit tests
 ```
 
@@ -310,6 +309,3 @@ API. What this is not:
   in the offline artifacts.
 - Not integration-tested against a live database. Persistence is asserted at the SQL-statement
   level through a recording cursor, which keeps the suite runnable in CI without a server.
-
-`docs/architecture.md` records the intended expansion and states explicitly which parts are
-roadmap rather than running code.
