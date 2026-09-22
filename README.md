@@ -18,7 +18,7 @@ configured portfolio `/privacy-preserving-authentication-audit-data-platform/` r
 pip install -e ".[dev]"   # install the package and dev tooling
 pytest                    # 84 tests across transform, tokenization, persistence, queue, and API
 ruff check .              # lint
-curl -fsS "https://${SITE_DOMAIN}/privacy-preserving-authentication-audit-data-platform/healthz"
+curl -fsS "https://vaddhiparthy.com/privacy-preserving-authentication-audit-data-platform/healthz"
 ```
 
 ## Current Implementation
