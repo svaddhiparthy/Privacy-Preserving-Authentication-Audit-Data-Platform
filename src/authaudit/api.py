@@ -1,7 +1,6 @@
 import json
 import os
 import re
-from datetime import UTC, datetime
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -108,21 +107,6 @@ def _event_metrics() -> dict:
         "high_risk_events": high_risk,
         "device_mix": device_mix,
     }
-
-
-def _audit_rows() -> list[dict]:
-    rows = _transformed_events()
-    now = datetime.now(UTC).isoformat(timespec="seconds")
-    return [
-        {
-            "batch_id": "demo-batch-001",
-            "started_at_utc": now,
-            "completed_at_utc": now,
-            "messages_received": len(rows),
-            "records_loaded": len(rows),
-            "records_rejected": 0,
-        }
-    ]
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -361,7 +345,7 @@ def flow() -> dict:
             {
                 "stage": "Operations Surface",
                 "tooling": "FastAPI, Docker, Caddy",
-                "artifact": "demo_api.py, Dockerfile, docker-compose.prod.yml",
+                "artifact": "src/authaudit/api.py, Dockerfile, docker-compose.prod.yml",
                 "output": (
                     "Public demo, health checks, contract browser, table previews, and platform "
                     "documentation"
