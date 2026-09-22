@@ -2,9 +2,9 @@
 
 ## Project Thesis
 
-Privacy-Preserving Authentication Audit Data Platform is a privacy-preserving authentication audit data platform. The core business problem is simple: authentication telemetry is operationally valuable, but it contains sensitive identifiers that should not be copied directly into analytical tables. The platform demonstrates how a data engineer can accept raw login events, validate them, minimize sensitive fields, preserve rejected records for investigation, and maintain auditable evidence for every load.
+The core problem is simple: authentication telemetry is operationally valuable, but it carries sensitive identifiers that should not be copied directly into analytical tables. The platform accepts raw login events, validates them against a contract, minimizes sensitive fields, preserves rejected records for investigation, and maintains auditable evidence for every load.
 
-The project is intentionally positioned as a banking-style data engineering system. It is not a dashboard-first product. The main artifact is the data platform: source contract, queue ingestion, validation, privacy transform, curated storage, quarantine storage, audit evidence, and an operational surface that proves the pipeline behavior.
+It is a data platform rather than a dashboard: source contract, queue ingestion, validation, privacy transform, curated storage, quarantine storage, audit evidence, and a read-only surface that exposes the pipeline's actual behavior.
 
 ## Implemented Scope
 
@@ -23,7 +23,7 @@ The project is intentionally positioned as a banking-style data engineering syst
 
 ## Source Data Strategy
 
-The live page can use two source modes. The default mode uses deterministic synthetic authentication telemetry stored in the repository. The external mode uses the Login Data Set for Risk-Based Authentication from DAS Group, available through Kaggle and Zenodo.
+The served page resolves its sample source in a fixed order: a normalized external dataset under `data/external/rba/` when one is present, then the packaged offline artifact under `docs/artifacts/rba_offline/`, and finally the deterministic synthetic fixture committed at `sample_data/login_events.jsonl`. The external dataset is the Login Data Set for Risk-Based Authentication from DAS Group, published under CC BY 4.0.
 
 The RBA dataset is a strong fit because it contains synthesized login attempts with IP address, country, region, city, ASN, user agent string, operating system, browser, device type, user ID, login timestamp, round-trip time, login success, attack-IP indicator, and account-takeover indicator. Those fields map naturally into the Privacy-Preserving Authentication Audit Data Platform contract and make the project more than a two-row demonstration.
 
@@ -78,7 +78,7 @@ The model is intentionally small. It demonstrates a production-shaped triad: cur
 
 The public page exposes API-backed sections instead of static screenshots. The transform preview calls the running service, reads packaged authentication events, executes the same transform function used by the worker, and returns curated output. The table browser is generated from the implemented schema and transform output. The source contract and SQL schema are served directly from repository assets packaged into the production image.
 
-The local offline RBA run processed 100,000 records from the downloaded RBA dataset. That run produced an audit record, source-stage sample, curated-stage sample, summary metrics, and table inventory. Those compact artifacts are packaged under `docs/artifacts/rba_offline` so the deployed site can present evidence of execution without committing the full 1.1 GB source dataset.
+The local offline RBA run processed 100,000 records in 5.16 seconds with 0 rejected. That run produced an audit record, source-stage sample, curated-stage sample, summary metrics, and table inventory. Those compact artifacts are packaged under `docs/artifacts/rba_offline` so the served page can present evidence of execution without committing the full source archive.
 
 ## Planned Expansion
 
@@ -92,7 +92,7 @@ The local offline RBA run processed 100,000 records from the downloaded RBA data
 | Streamlit control room | Rich operational surface | Planned |
 | Monitoring | Freshness, reject rate, throughput, endpoint health | Planned |
 
-The expansion should remain local-first. Cloud services are useful for portfolio proof, but they should not be required for development or review.
+The expansion should remain local-first. Cloud services may be useful later, but they should not be required to develop, run, or review the platform.
 
 ## Data Source Expansion Options
 

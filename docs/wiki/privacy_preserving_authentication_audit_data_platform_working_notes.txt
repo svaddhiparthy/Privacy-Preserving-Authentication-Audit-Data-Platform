@@ -2,24 +2,29 @@
 
 ===== Purpose =====
 
-This page records critical directional decisions, implementation checkpoints, and operating notes for Privacy-Preserving Authentication Audit Data Platform.
+This page records directional decisions, implementation checkpoints, and operating notes for the platform.
 
 ===== 2026-04-27 — Direction Lock =====
 
-  * Existing folder will be upgraded in place: Live\PII Ingestion.
   * Formal title: Privacy Preserving Authentication Audit Data Platform.
   * Internal name: Privacy-Preserving Authentication Audit Data Platform.
   * Public slug: privacy-preserving-authentication-audit-data-platform.
-  * Build mode: local-first.
-  * Telegram integration is excluded.
-  * Existing S3 bucket family can be reused later under a project-specific prefix.
-  * FinLens layout and documentation style will be reused as a pattern, not copied as content.
+  * Build mode: local-first. LocalStack stands in for AWS-compatible services during development.
+  * Object storage is out of scope for the first build. If it is added later it lands under a prefix owned by this project rather than one shared with another system.
+  * A component is described as implemented only when its code path exists, its artifact is packaged, and the checks pass. Everything else is named as roadmap.
 
 ===== 2026-04-27 — Refactor Checkpoint =====
 
   * The original flat ingestion script was modularized into src/authaudit.
   * The public FastAPI surface lives in the package as authaudit.api.
   * Unit tests continue to pass after modularization.
+
+===== 2026-04-27 — Offline Execution Evidence =====
+
+  * scripts/run_offline_rba_pipeline.py streams a local source archive through the same adapter and transform the worker uses, with no queue, database, or cloud services involved.
+  * One run processed 100,000 records in 5.16 seconds with 0 rejected.
+  * Artifacts are packaged under docs/artifacts/rba_offline: manifest, metrics, table inventory, audit row, and preview slices of the source and curated stages.
+  * Only preview slices are committed. The full source archive stays local and is ignored by Git.
 
 ===== Future Notes Protocol =====
 
