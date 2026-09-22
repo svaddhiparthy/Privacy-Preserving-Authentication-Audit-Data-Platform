@@ -103,13 +103,13 @@ Modules such as PII vault, Airflow, dbt, S3 lakehouse storage, and monitoring re
 
 ## Cloud Posture
 
-The project is local-first. LocalStack is the default for AWS-compatible services. The existing S3 bucket family can be reused later under a project-specific prefix:
+The project is local-first. LocalStack is the default for AWS-compatible services. If object storage is added later, it lands under a prefix owned by this project rather than shared with another one:
 
 ```text
-s3://finlens-vaddhiparthy-vip-raw/pramana-ledger/bronze/
-s3://finlens-vaddhiparthy-vip-raw/pramana-ledger/silver/
-s3://finlens-vaddhiparthy-vip-raw/pramana-ledger/gold/
-s3://finlens-vaddhiparthy-vip-raw/pramana-ledger/reports/
+s3://<raw-bucket>/privacy-preserving-authentication-audit-data-platform/bronze/
+s3://<raw-bucket>/privacy-preserving-authentication-audit-data-platform/silver/
+s3://<raw-bucket>/privacy-preserving-authentication-audit-data-platform/gold/
+s3://<raw-bucket>/privacy-preserving-authentication-audit-data-platform/reports/
 ```
 
 No cloud mirror is required for the first working build.

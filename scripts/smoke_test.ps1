@@ -1,7 +1,8 @@
 $ErrorActionPreference = "Stop"
 
-python -m unittest discover -s tests -p "test_*.py"
-Get-ChildItem src\pramanaledger\*.py | ForEach-Object { python -m py_compile $_.FullName }
-python -m py_compile code_fetch_vaddhiparthy.py demo_api.py
+# Mirrors the lint and test jobs in .github/workflows/ci.yml.
+ruff check .
+pytest
+python scripts/check_test_count.py
 
 Write-Host "Smoke test passed."
