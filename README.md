@@ -2,17 +2,11 @@
 
 [![CI](https://github.com/Vaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Vaddhiparthy/Privacy-Preserving-Authentication-Audit-Data-Platform/actions/workflows/ci.yml)
 
-**Portfolio:** [vaddhiparthy.com](https://vaddhiparthy.com/) | [Data Platforms](https://vaddhiparthy.com/data-platforms)
+**Live:** [vaddhiparthy.com/privacy-preserving-authentication-audit-data-platform](https://vaddhiparthy.com/privacy-preserving-authentication-audit-data-platform/)
 
 Privacy Preserving Authentication Audit Data Platform is a local-first data engineering project for secure authentication-event ingestion. The platform consumes login-event messages from an SQS-compatible queue, validates the event contract, tokenizes sensitive fields with secret-keyed HMAC-SHA256, writes idempotent analytical records into PostgreSQL, quarantines malformed records, and records batch-level audit evidence.
 
 The Python package is `authaudit`.
-
-The public technical surface is live at:
-
-```text
-configured portfolio `/privacy-preserving-authentication-audit-data-platform/` route
-```
 
 ## How to verify
 
@@ -211,7 +205,7 @@ No real secret values belong in committed code, markdown, SQL, logs, or Docker b
 Run unit tests:
 
 ```powershell
-python -m unittest discover -s tests -p "test_*.py"
+pytest
 ```
 
 Compile the Python modules:
